@@ -1,0 +1,4403 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Samuel: A Jornada da Honra</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+
+      :root {
+        --bg: #0a0a0f;
+        --panel: #12121e;
+        --border: #3a3aff;
+        --yellow: #ffe066;
+        --red: #ff4444;
+        --green: #44ff88;
+        --blue: #4488ff;
+        --purple: #cc44ff;
+        --white: #f0f0ff;
+        --gray: #666688;
+        --hp-green: #00e676;
+        --hp-red: #ff1744;
+        --mp-blue: #2979ff;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--white);
+        font-family: "Press Start 2P", monospace;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      #game-container {
+        width: 700px;
+        max-width: 100vw;
+        padding: 10px;
+      }
+
+      /* ---- TITLE SCREEN ---- */
+      #screen-title {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        gap: 24px;
+        text-align: center;
+        position: relative;
+      }
+
+      .title-stars {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .title-logo {
+        font-size: 20px;
+        color: var(--yellow);
+        text-shadow:
+          0 0 20px #ffe06688,
+          3px 3px 0 #b8860b;
+        animation: pulse 2s ease-in-out infinite;
+        z-index: 1;
+        line-height: 2;
+      }
+
+      .title-sub {
+        font-size: 8px;
+        color: var(--blue);
+        letter-spacing: 2px;
+        z-index: 1;
+      }
+
+      .title-btn {
+        font-family: "Press Start 2P", monospace;
+        font-size: 10px;
+        padding: 14px 28px;
+        background: var(--yellow);
+        color: #000;
+        border: none;
+        cursor: pointer;
+        image-rendering: pixelated;
+        border-bottom: 4px solid #b8860b;
+        border-right: 4px solid #b8860b;
+        transition: transform 0.1s;
+        z-index: 1;
+        animation: blink 1s step-end infinite;
+      }
+
+      .title-btn:hover {
+        transform: scale(1.05);
+      }
+      .title-btn:active {
+        transform: translateY(3px);
+        border-bottom: 1px solid #b8860b;
+      }
+
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          text-shadow:
+            0 0 20px #ffe06688,
+            3px 3px 0 #b8860b;
+        }
+        50% {
+          text-shadow:
+            0 0 40px #ffe066cc,
+            3px 3px 0 #b8860b;
+        }
+      }
+
+      /* ---- BATTLE SCREEN ---- */
+      #screen-battle {
+        display: none;
+        flex-direction: column;
+        gap: 10px;
+        padding-top: 10px;
+      }
+
+      .battle-arena {
+        background: linear-gradient(
+          180deg,
+          #050510 0%,
+          #0d0828 40%,
+          #1a0d3a 70%,
+          #2a1220 100%
+        );
+        border: 3px solid var(--border);
+        border-radius: 8px;
+        height: 300px;
+        position: relative;
+        overflow: hidden;
+        box-shadow:
+          0 0 30px #3a3aff44,
+          inset 0 0 60px #00000088;
+      }
+
+      .arena-ground {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 70px;
+        background: linear-gradient(
+          180deg,
+          transparent 0%,
+          #1a0830 40%,
+          #0d0420 100%
+        );
+        border-top: 2px solid #44228844;
+      }
+
+      .arena-glow-left {
+        position: absolute;
+        bottom: 40px;
+        left: 60px;
+        width: 80px;
+        height: 20px;
+        background: radial-gradient(ellipse, #4488ff44 0%, transparent 70%);
+        border-radius: 50%;
+        filter: blur(4px);
+      }
+
+      .arena-glow-right {
+        position: absolute;
+        bottom: 40px;
+        right: 50px;
+        width: 100px;
+        height: 20px;
+        background: radial-gradient(ellipse, #cc44ff44 0%, transparent 70%);
+        border-radius: 50%;
+        filter: blur(4px);
+        transition: background 1s;
+      }
+
+      .arena-bg-stars {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      /* removed */
+
+      .portrait-wrap {
+        position: absolute;
+        bottom: 55px;
+      }
+
+      .char-label {
+        position: absolute;
+        bottom: -2px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 5px;
+        color: #aaaacc;
+        white-space: nowrap;
+        letter-spacing: 1px;
+      }
+
+      .fighter-samuel {
+        position: absolute;
+        bottom: 70px;
+        left: 70px;
+        image-rendering: pixelated;
+      }
+
+      .fighter-boss {
+        position: absolute;
+        bottom: 70px;
+        right: 50px;
+        image-rendering: pixelated;
+      }
+
+      /* HP Bars */
+      .hud-panel {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .hud-box {
+        background: linear-gradient(135deg, #12121e, #1a1a2e);
+        border: 2px solid var(--border);
+        border-radius: 6px;
+        padding: 10px 14px;
+        flex: 1;
+        box-shadow: inset 0 1px 0 #ffffff11;
+      }
+
+      .hud-name {
+        font-size: 8px;
+        color: var(--yellow);
+        margin-bottom: 8px;
+        text-transform: uppercase;
+      }
+
+      .hud-lvl {
+        color: var(--gray);
+        font-size: 6px;
+        margin-left: 6px;
+      }
+
+      .hp-bar-wrap {
+        background: #222240;
+        height: 10px;
+        border-radius: 2px;
+        overflow: hidden;
+        margin: 4px 0;
+        border: 1px solid #333;
+      }
+
+      .hp-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--hp-green), #00ff88);
+        transition:
+          width 0.5s ease,
+          background 0.5s;
+        border-radius: 2px;
+      }
+
+      .hp-bar-fill.danger {
+        background: linear-gradient(90deg, var(--hp-red), #ff6644);
+      }
+      .hp-bar-fill.medium {
+        background: linear-gradient(90deg, #ffaa00, #ffcc44);
+      }
+
+      .hp-text {
+        font-size: 7px;
+        color: var(--white);
+        margin-top: 2px;
+      }
+
+      .mp-bar-wrap {
+        background: #222240;
+        height: 6px;
+        border-radius: 2px;
+        overflow: hidden;
+        margin: 4px 0;
+        border: 1px solid #333;
+      }
+
+      .mp-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--mp-blue), #44aaff);
+        transition: width 0.4s ease;
+      }
+
+      /* Battle log */
+      .battle-log {
+        background: linear-gradient(135deg, #0e0e1c, #14142a);
+        border: 3px solid var(--border);
+        border-radius: 6px;
+        padding: 12px 16px;
+        min-height: 80px;
+        font-size: 9px;
+        line-height: 2;
+        position: relative;
+        box-shadow: inset 0 0 20px #00000088;
+      }
+
+      .log-line {
+        color: var(--white);
+        margin-bottom: 2px;
+      }
+      .log-line.damage {
+        color: var(--red);
+      }
+      .log-line.heal {
+        color: var(--green);
+      }
+      .log-line.info {
+        color: var(--yellow);
+      }
+      .log-line.boss {
+        color: var(--purple);
+      }
+      .log-line.miss {
+        color: var(--gray);
+      }
+
+      .log-cursor {
+        display: inline-block;
+        width: 8px;
+        height: 12px;
+        background: var(--white);
+        animation: blink 0.8s step-end infinite;
+        vertical-align: middle;
+        margin-left: 4px;
+      }
+
+      /* Action panel */
+      .action-panel {
+        background: linear-gradient(135deg, #0e0e1c, #14142a);
+        border: 3px solid var(--border);
+        border-radius: 6px;
+        padding: 12px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .action-btn {
+        font-family: "Press Start 2P", monospace;
+        font-size: 8px;
+        padding: 10px 14px;
+        border: 2px solid transparent;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: all 0.15s;
+        flex: 1;
+        min-width: 100px;
+        text-align: center;
+        position: relative;
+      }
+
+      .action-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+      }
+
+      .action-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .btn-attack {
+        background: #3a0a0a;
+        color: var(--red);
+        border-color: var(--red);
+      }
+      .btn-attack:hover:not(:disabled) {
+        background: #5a1a1a;
+      }
+
+      .btn-skill {
+        background: #0a0a3a;
+        color: var(--blue);
+        border-color: var(--blue);
+      }
+      .btn-skill:hover:not(:disabled) {
+        background: #1a1a5a;
+      }
+
+      .btn-defend {
+        background: #1a2a0a;
+        color: var(--green);
+        border-color: var(--green);
+      }
+      .btn-defend:hover:not(:disabled) {
+        background: #2a3a1a;
+      }
+
+      .btn-item {
+        background: #2a1a0a;
+        color: var(--yellow);
+        border-color: var(--yellow);
+      }
+      .btn-item:hover:not(:disabled) {
+        background: #3a2a1a;
+      }
+
+      .action-cost {
+        font-size: 6px;
+        color: var(--mp-blue);
+        margin-top: 4px;
+      }
+
+      /* Boss HP bar top */
+      .boss-name-bar {
+        position: absolute;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.7);
+        border: 2px solid var(--purple);
+        border-radius: 3px;
+        padding: 4px 12px;
+        font-size: 8px;
+        color: var(--purple);
+        white-space: nowrap;
+        text-align: center;
+        min-width: 220px;
+      }
+
+      .boss-hp-mini {
+        height: 6px;
+        background: #222;
+        border-radius: 2px;
+        margin-top: 4px;
+        overflow: hidden;
+      }
+
+      .boss-hp-mini-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--purple), #ff44cc);
+        transition: width 0.5s;
+      }
+
+      /* Effects */
+      .hit-effect {
+        position: absolute;
+        font-size: 18px;
+        font-family: "Press Start 2P", monospace;
+        font-weight: bold;
+        pointer-events: none;
+        animation: hit-fly 0.8s ease-out forwards;
+        z-index: 10;
+        text-shadow: 2px 2px 0 #000;
+      }
+
+      @keyframes hit-fly {
+        0% {
+          transform: translateY(0) scale(0.5);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-60px) scale(1.2);
+          opacity: 0;
+        }
+      }
+
+      .shake {
+        animation: shake 0.4s ease-in-out;
+      }
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        20% {
+          transform: translateX(-8px);
+        }
+        40% {
+          transform: translateX(8px);
+        }
+        60% {
+          transform: translateX(-6px);
+        }
+        80% {
+          transform: translateX(6px);
+        }
+      }
+
+      /* Victory screen */
+      #screen-victory {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        gap: 20px;
+        text-align: center;
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .victory-title {
+        font-size: 22px;
+        color: var(--yellow);
+        text-shadow:
+          0 0 30px #ffe066,
+          3px 3px 0 #b8860b;
+        animation: victory-pulse 1.5s ease-in-out infinite;
+        line-height: 1.8;
+      }
+
+      @keyframes victory-pulse {
+        0%,
+        100% {
+          text-shadow:
+            0 0 30px #ffe066,
+            3px 3px 0 #b8860b;
+        }
+        50% {
+          text-shadow:
+            0 0 60px #ffe066cc,
+            0 0 80px #ffaa00,
+            3px 3px 0 #b8860b;
+        }
+      }
+
+      .victory-msg {
+        font-size: 11px;
+        color: var(--white);
+        line-height: 2.5;
+        max-width: 500px;
+        text-shadow: 2px 2px 0 #000;
+      }
+
+      .birthday-text {
+        font-size: 16px;
+        color: #ff88cc;
+        text-shadow:
+          0 0 20px #ff44aa,
+          2px 2px 0 #880044;
+        animation: birthday 1s ease-in-out infinite alternate;
+        line-height: 2;
+      }
+
+      @keyframes birthday {
+        from {
+          transform: scale(1) rotate(-2deg);
+        }
+        to {
+          transform: scale(1.06) rotate(2deg);
+        }
+      }
+
+      .confetti {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .restart-btn {
+        font-family: "Press Start 2P", monospace;
+        font-size: 9px;
+        padding: 12px 24px;
+        background: var(--panel);
+        color: var(--yellow);
+        border: 2px solid var(--yellow);
+        cursor: pointer;
+        z-index: 1;
+        transition: all 0.15s;
+        border-radius: 3px;
+      }
+
+      .restart-btn:hover {
+        background: var(--yellow);
+        color: #000;
+      }
+
+      /* Game over */
+      #screen-gameover {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        gap: 20px;
+        text-align: center;
+      }
+
+      .gameover-title {
+        font-size: 28px;
+        color: var(--red);
+        text-shadow:
+          0 0 30px #ff4444,
+          3px 3px 0 #880000;
+        animation: pulse 1s ease-in-out infinite;
+      }
+
+      /* Stage indicator */
+      .stage-indicator {
+        text-align: center;
+        font-size: 8px;
+        color: var(--gray);
+        padding: 4px 0;
+        letter-spacing: 2px;
+      }
+
+      .stage-dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 2px solid var(--gray);
+        margin: 0 4px;
+        transition: all 0.3s;
+      }
+
+      .stage-dot.done {
+        background: var(--yellow);
+        border-color: var(--yellow);
+      }
+      .stage-dot.current {
+        background: var(--red);
+        border-color: var(--red);
+        box-shadow: 0 0 8px var(--red);
+      }
+
+      /* Scroll */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--panel);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border);
+      }
+
+      /* Transition */
+      .screen-fade {
+        animation: fadein 0.5s ease;
+      }
+
+      @keyframes fadein {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .boss-phase-alert {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.9);
+        border: 3px solid var(--red);
+        color: var(--red);
+        font-size: 12px;
+        padding: 14px 24px;
+        text-align: center;
+        z-index: 20;
+        display: none;
+        white-space: nowrap;
+      }
+
+      .status-icon {
+        font-size: 7px;
+        margin-left: 4px;
+        padding: 2px 4px;
+        border-radius: 2px;
+      }
+
+      .status-burn {
+        background: #ff440044;
+        color: #ff8844;
+        border: 1px solid #ff4400;
+      }
+      .status-freeze {
+        background: #4488ff44;
+        color: #88ccff;
+        border: 1px solid #4488ff;
+      }
+      .status-stun {
+        background: #ffff0044;
+        color: #ffee44;
+        border: 1px solid #ffff00;
+      }
+      .status-defend {
+        background: #44ff8844;
+        color: #44ff88;
+        border: 1px solid #44ff88;
+      }
+
+      .skill-menu {
+        display: none;
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        background: var(--panel);
+        border: 2px solid var(--blue);
+        border-radius: 4px;
+        padding: 8px;
+        z-index: 50;
+        min-width: 220px;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .skill-menu.open {
+        display: flex;
+      }
+
+      .skill-item {
+        font-family: "Press Start 2P", monospace;
+        font-size: 7px;
+        padding: 6px 10px;
+        cursor: pointer;
+        color: var(--white);
+        border-radius: 2px;
+        transition: background 0.1s;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .skill-item:hover {
+        background: #1a1a3a;
+      }
+      .skill-item .skill-cost {
+        color: var(--mp-blue);
+        font-size: 6px;
+      }
+
+      .btn-wrap {
+        position: relative;
+      }
+
+      .portrait-wrap {
+        position: absolute;
+        bottom: 60px;
+      }
+
+      .status-bar {
+        font-size: 6px;
+        margin-top: 4px;
+        min-height: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ===== TITLE SCREEN ===== -->
+    <div id="screen-title">
+      <canvas class="title-stars" id="starCanvas"></canvas>
+      <div class="title-logo">
+        ⚔️ SAMUEL ⚔️<br /><span
+          style="
+            font-size: 11px;
+            color: #ff88cc;
+            text-shadow:
+              0 0 15px #ff44aa,
+              2px 2px 0 #880044;
+          "
+          >✦ A Jornada da Honra ✦</span
+        >
+      </div>
+      <div class="title-sub">— 3 BOSSES ÉPICOS • BATALHA POR TURNOS —</div>
+      <canvas
+        id="titleCharCanvas"
+        width="150"
+        height="150"
+        style="image-rendering: pixelated; margin: 10px 0"
+      ></canvas>
+      <button class="title-btn" onclick="showStory()">▶ INICIAR JORNADA</button>
+      <div style="font-size: 6px; color: var(--gray); margin-top: 10px">
+        Pressione para começar
+      </div>
+    </div>
+
+    <!-- ===== STORY SCREEN ===== -->
+    <div
+      id="screen-story"
+      style="
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        gap: 0;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      "
+    >
+      <canvas
+        class="title-stars"
+        id="storyStarsCanvas"
+        style="
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          pointer-events: none;
+          z-index: 0;
+        "
+      ></canvas>
+      <div
+        id="story-container"
+        style="
+          z-index: 1;
+          width: 680px;
+          max-width: 96vw;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0;
+        "
+      >
+        <!-- Chapter header -->
+        <div
+          id="story-chapter"
+          style="
+            font-size: 7px;
+            color: var(--gray);
+            letter-spacing: 3px;
+            margin-bottom: 18px;
+            opacity: 0;
+            transition: opacity 0.6s;
+          "
+        >
+          PRÓLOGO
+        </div>
+
+        <!-- Scene art canvas -->
+        <canvas
+          id="storyArtCanvas"
+          width="320"
+          height="160"
+          style="
+            image-rendering: pixelated;
+            margin-bottom: 18px;
+            border: 2px solid #2a2a5a;
+            border-radius: 4px;
+            box-shadow: 0 0 30px #3a3aff22;
+            opacity: 0;
+            transition: opacity 0.6s;
+          "
+        ></canvas>
+
+        <!-- Text box (RPG style) -->
+        <div
+          id="story-box"
+          style="
+            background: linear-gradient(135deg, #0e0e1c, #14142a);
+            border: 3px solid var(--border);
+            border-radius: 6px;
+            padding: 20px 24px;
+            width: 100%;
+            min-height: 100px;
+            position: relative;
+            box-shadow: inset 0 0 20px #00000088;
+            opacity: 0;
+            transition: opacity 0.6s;
+          "
+        >
+          <div
+            id="story-speaker"
+            style="
+              font-size: 7px;
+              color: var(--yellow);
+              margin-bottom: 10px;
+              min-height: 14px;
+            "
+          ></div>
+          <div
+            id="story-text"
+            style="
+              font-size: 8px;
+              color: var(--white);
+              line-height: 2.2;
+              min-height: 60px;
+              text-align: left;
+            "
+          ></div>
+          <span
+            id="story-cursor"
+            style="
+              display: inline-block;
+              width: 8px;
+              height: 12px;
+              background: var(--white);
+              animation: blink 0.8s step-end infinite;
+              vertical-align: middle;
+              margin-left: 4px;
+              opacity: 0;
+            "
+          ></span>
+        </div>
+
+        <!-- Navigation -->
+        <div
+          style="
+            display: flex;
+            gap: 16px;
+            margin-top: 16px;
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 0.6s;
+          "
+          id="story-nav"
+        >
+          <button
+            class="restart-btn"
+            id="story-skip"
+            onclick="skipStory()"
+            style="font-size: 7px; padding: 8px 16px"
+          >
+            ↷ PULAR
+          </button>
+          <button
+            class="title-btn"
+            id="story-next"
+            onclick="nextScene()"
+            style="font-size: 9px; padding: 12px 24px; animation: none"
+          >
+            ▶ CONTINUAR
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="game-container">
+      <div id="screen-battle">
+        <div class="stage-indicator" id="stageIndicator">
+          BOSS <span class="stage-dot" id="d1"></span
+          ><span class="stage-dot" id="d2"></span
+          ><span class="stage-dot" id="d3"></span>
+        </div>
+
+        <div class="battle-arena" id="battleArena">
+          <canvas class="arena-bg-stars" id="arenaBgCanvas"></canvas>
+          <div class="arena-ground"></div>
+          <div class="arena-glow-left" id="samuelGlow"></div>
+          <div class="arena-glow-right" id="bossGlow"></div>
+
+          <div class="boss-name-bar" id="bossNameBar">
+            <div id="bossNameText">???</div>
+            <div class="boss-hp-mini">
+              <div
+                class="boss-hp-mini-fill"
+                id="bossMiniHp"
+                style="width: 100%"
+              ></div>
+            </div>
+          </div>
+
+          <div class="portrait-wrap" id="samuelPortrait" style="left: 50px">
+            <canvas
+              id="samuelCanvas"
+              width="108"
+              height="132"
+              style="image-rendering: pixelated"
+            ></canvas>
+            <div class="char-label">SAMUEL</div>
+          </div>
+          <div
+            class="portrait-wrap"
+            id="bossPortrait"
+            style="right: 40px; bottom: 55px"
+          >
+            <canvas
+              id="bossCanvas"
+              width="132"
+              height="144"
+              style="image-rendering: pixelated"
+            ></canvas>
+          </div>
+
+          <div class="boss-phase-alert" id="phaseAlert">
+            ⚠ FASE 2 ATIVADA! ⚠
+          </div>
+        </div>
+
+        <div class="hud-panel">
+          <div class="hud-box">
+            <div class="hud-name">
+              SAMUEL <span class="hud-lvl">Lv.15</span>
+            </div>
+            <div class="hp-bar-wrap">
+              <div
+                class="hp-bar-fill"
+                id="samuelHpBar"
+                style="width: 100%"
+              ></div>
+            </div>
+            <div class="hp-text">HP: <span id="samuelHpTxt">120</span>/120</div>
+            <div class="mp-bar-wrap">
+              <div
+                class="mp-bar-fill"
+                id="samuelMpBar"
+                style="width: 100%"
+              ></div>
+            </div>
+            <div class="hp-text" style="color: var(--mp-blue)">
+              MP: <span id="samuelMpTxt">70</span>/70
+            </div>
+            <div class="status-bar" id="samuelStatus"></div>
+          </div>
+          <div class="hud-box">
+            <div class="hud-name" id="bossHudName" style="color: var(--purple)">
+              BOSS
+            </div>
+            <div class="hp-bar-wrap">
+              <div
+                class="hp-bar-fill"
+                id="bossHpBar"
+                style="
+                  width: 100%;
+                  background: linear-gradient(90deg, var(--purple), #ff44cc);
+                "
+              ></div>
+            </div>
+            <div class="hp-text">
+              HP: <span id="bossHpTxt">?</span>/<span id="bossMaxHpTxt">?</span>
+            </div>
+            <div class="status-bar" id="bossStatus"></div>
+          </div>
+        </div>
+
+        <div class="battle-log" id="battleLog">
+          <div class="log-line info">A batalha começa...</div>
+          <span class="log-cursor"></span>
+        </div>
+
+        <div class="action-panel">
+          <button
+            class="action-btn btn-attack"
+            id="btnAttack"
+            onclick="playerAction('attack')"
+          >
+            ⚔️ ATACAR
+          </button>
+          <div class="btn-wrap">
+            <button
+              class="action-btn btn-skill"
+              id="btnSkill"
+              onclick="toggleSkillMenu()"
+            >
+              ✨ SKILL
+            </button>
+            <div class="skill-menu" id="skillMenu">
+              <div class="skill-item" onclick="playerAction('skill_fireball')">
+                🔥 Bola de Fogo <span class="skill-cost">12MP</span>
+              </div>
+              <div class="skill-item" onclick="playerAction('skill_thunder')">
+                ⚡ Raio Negro <span class="skill-cost">18MP</span>
+              </div>
+              <div class="skill-item" onclick="playerAction('skill_heal')">
+                💚 Cura <span class="skill-cost">8MP</span>
+              </div>
+              <div class="skill-item" onclick="playerAction('skill_drain')">
+                💜 Drenar Vida <span class="skill-cost">22MP</span>
+              </div>
+              <div
+                class="skill-item"
+                onclick="playerAction('skill_determination')"
+                style="color: #ff4444; border-top: 1px solid #330000"
+              >
+                ♥ DETERMINAÇÃO <span class="skill-cost">35MP</span>
+              </div>
+            </div>
+          </div>
+          <button
+            class="action-btn btn-defend"
+            id="btnDefend"
+            onclick="playerAction('defend')"
+          >
+            🛡️ DEFENDER
+          </button>
+          <button
+            class="action-btn btn-item"
+            id="btnItem"
+            onclick="playerAction('item')"
+          >
+            🧪 ITEM
+          </button>
+        </div>
+      </div>
+
+      <!-- GAME OVER -->
+      <div id="screen-gameover">
+        <div class="gameover-title">GAME OVER</div>
+        <div style="font-size: 9px; color: var(--gray)">
+          Samuel foi derrotado...
+        </div>
+        <button class="restart-btn" onclick="restartGame()">
+          ↩ TENTAR NOVAMENTE
+        </button>
+      </div>
+
+      <!-- VICTORY -->
+      <div id="screen-victory">
+        <canvas class="confetti" id="confettiCanvas"></canvas>
+        <canvas
+          id="victoryCharCanvas"
+          width="130"
+          height="150"
+          style="image-rendering: pixelated; z-index: 1"
+        ></canvas>
+        <div class="victory-title" style="z-index: 1">
+          🏆 HONRA CONQUISTADA! 🏆
+        </div>
+        <div class="birthday-text" style="z-index: 1">
+          🎂 FELIZ ANIVERSÁRIO, SAMUEL! 🎂
+        </div>
+        <div class="victory-msg" style="z-index: 1">
+          Você enfrentou três<br />
+          bosses lendários e venceu!<br /><br />
+          <span style="color: var(--yellow)">O Prêmio de Honra é seu!</span
+          ><br /><br />
+          <span style="color: #ff88cc; font-size: 9px"
+            >Que seu dia seja épico<br />como essa batalha! 🎉</span
+          >
+        </div>
+        <button class="restart-btn" onclick="restartGame()" style="z-index: 1">
+          ↩ JOGAR NOVAMENTE
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // ====================== AUDIO ENGINE ======================
+      const AC = new (window.AudioContext || window.webkitAudioContext)();
+
+      function unlockAudio() {
+        if (AC.state === "suspended") AC.resume();
+        document.removeEventListener("click", unlockAudio);
+        document.removeEventListener("keydown", unlockAudio);
+      }
+      document.addEventListener("click", unlockAudio);
+      document.addEventListener("keydown", unlockAudio);
+
+      // Sound effects
+      function playHit(type = "normal") {
+        const o = AC.createOscillator();
+        const g = AC.createGain();
+        o.connect(g);
+        g.connect(AC.destination);
+        if (type === "normal") {
+          o.frequency.setValueAtTime(220, AC.currentTime);
+          o.frequency.exponentialRampToValueAtTime(110, AC.currentTime + 0.15);
+          g.gain.setValueAtTime(0.3, AC.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + 0.2);
+          o.type = "sawtooth";
+          o.start();
+          o.stop(AC.currentTime + 0.2);
+        } else if (type === "crit") {
+          o.frequency.setValueAtTime(440, AC.currentTime);
+          o.frequency.exponentialRampToValueAtTime(880, AC.currentTime + 0.05);
+          o.frequency.exponentialRampToValueAtTime(110, AC.currentTime + 0.25);
+          g.gain.setValueAtTime(0.5, AC.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + 0.3);
+          o.type = "square";
+          o.start();
+          o.stop(AC.currentTime + 0.3);
+        } else if (type === "boss") {
+          [180, 270, 360].forEach((f, i) => {
+            const o2 = AC.createOscillator();
+            const g2 = AC.createGain();
+            o2.connect(g2);
+            g2.connect(AC.destination);
+            o2.frequency.setValueAtTime(f, AC.currentTime + i * 0.04);
+            o2.frequency.exponentialRampToValueAtTime(
+              f * 0.5,
+              AC.currentTime + i * 0.04 + 0.2,
+            );
+            g2.gain.setValueAtTime(0.25, AC.currentTime + i * 0.04);
+            g2.gain.exponentialRampToValueAtTime(
+              0.001,
+              AC.currentTime + i * 0.04 + 0.3,
+            );
+            o2.type = "sawtooth";
+            o2.start();
+            o2.stop(AC.currentTime + i * 0.04 + 0.3);
+          });
+          return;
+        } else if (type === "heal") {
+          [523, 659, 784].forEach((f, i) => {
+            const o2 = AC.createOscillator();
+            const g2 = AC.createGain();
+            o2.connect(g2);
+            g2.connect(AC.destination);
+            o2.frequency.value = f;
+            g2.gain.setValueAtTime(0.2, AC.currentTime + i * 0.1);
+            g2.gain.exponentialRampToValueAtTime(
+              0.001,
+              AC.currentTime + i * 0.1 + 0.3,
+            );
+            o2.type = "sine";
+            o2.start(AC.currentTime + i * 0.1);
+            o2.stop(AC.currentTime + i * 0.1 + 0.3);
+          });
+          return;
+        } else if (type === "level") {
+          [523, 659, 784, 1047].forEach((f, i) => {
+            const o2 = AC.createOscillator();
+            const g2 = AC.createGain();
+            o2.connect(g2);
+            g2.connect(AC.destination);
+            o2.frequency.value = f;
+            g2.gain.setValueAtTime(0.3, AC.currentTime + i * 0.12);
+            g2.gain.exponentialRampToValueAtTime(
+              0.001,
+              AC.currentTime + i * 0.12 + 0.35,
+            );
+            o2.type = "triangle";
+            o2.start(AC.currentTime + i * 0.12);
+            o2.stop(AC.currentTime + i * 0.12 + 0.35);
+          });
+          return;
+        } else if (type === "miss") {
+          o.frequency.setValueAtTime(100, AC.currentTime);
+          g.gain.setValueAtTime(0.1, AC.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + 0.1);
+          o.type = "sine";
+          o.start();
+          o.stop(AC.currentTime + 0.1);
+        }
+      }
+
+      // BGM generator
+      let bgmNodes = [];
+      let bgmActive = false;
+
+      const BATTLE_NOTES = [
+        [110, 0.18],
+        [110, 0.18],
+        [165, 0.18],
+        [110, 0.18],
+        [147, 0.18],
+        [110, 0.18],
+        [131, 0.18],
+        [123, 0.18],
+      ];
+
+      const BOSS3_NOTES = [
+        [73, 0.15],
+        [73, 0.15],
+        [110, 0.15],
+        [73, 0.15],
+        [98, 0.15],
+        [73, 0.15],
+        [87, 0.15],
+        [82, 0.15],
+      ];
+
+      function stopBGM() {
+        bgmActive = false;
+        bgmNodes.forEach((n) => {
+          try {
+            n.stop();
+          } catch (e) {}
+        });
+        bgmNodes = [];
+      }
+
+      function playBGM(bossIndex) {
+        stopBGM();
+        bgmActive = true;
+        const notes = bossIndex === 2 ? BOSS3_NOTES : BATTLE_NOTES;
+        const tempo = bossIndex === 2 ? 0.13 : 0.16;
+        const totalLen = notes.reduce((a, n) => a + n[1], 0);
+
+        function loop(startTime, repeat) {
+          if (!bgmActive) return;
+          const g = AC.createGain();
+          g.gain.value = 0.12;
+          g.connect(AC.destination);
+          let t = startTime;
+          notes.forEach(([freq, dur]) => {
+            const o = AC.createOscillator();
+            const og = AC.createGain();
+            o.type = "square";
+            o.frequency.value = freq;
+            o.connect(og);
+            og.connect(g);
+            og.gain.setValueAtTime(1, t);
+            og.gain.setValueAtTime(0, t + dur * 0.8);
+            o.start(t);
+            o.stop(t + dur);
+            bgmNodes.push(o);
+            t += dur;
+          });
+          // Bass
+          [55, 55, 82, 55].forEach((f, i) => {
+            const o = AC.createOscillator();
+            const og = AC.createGain();
+            o.type = "sine";
+            o.frequency.value = f;
+            o.connect(og);
+            og.connect(g);
+            og.gain.setValueAtTime(0.5, startTime + (i * totalLen) / 4);
+            og.gain.setValueAtTime(
+              0,
+              startTime + (i * totalLen) / 4 + (totalLen / 4) * 0.8,
+            );
+            o.start(startTime + (i * totalLen) / 4);
+            o.stop(startTime + ((i + 1) * totalLen) / 4);
+            bgmNodes.push(o);
+          });
+          setTimeout(
+            () => {
+              if (bgmActive) loop(AC.currentTime + 0.01, repeat + 1);
+            },
+            (totalLen - 0.05) * 1000,
+          );
+        }
+        loop(AC.currentTime + 0.01, 0);
+      }
+
+      function playVictoryJingle() {
+        stopBGM();
+        const melody = [
+          523, 523, 523, 392, 523, 659, 392, 784, 392, 523, 330, 349, 392, 523,
+          523, 523, 587, 523,
+        ];
+        const durs = [
+          0.2, 0.2, 0.2, 0.15, 0.4, 0.4, 0.3, 0.5, 0.2, 0.2, 0.2, 0.2, 0.2, 0.3,
+          0.15, 0.15, 0.15, 0.5,
+        ];
+        let t = AC.currentTime + 0.1;
+        melody.forEach((f, i) => {
+          const o = AC.createOscillator();
+          const g = AC.createGain();
+          o.type = "triangle";
+          o.frequency.value = f;
+          o.connect(g);
+          g.connect(AC.destination);
+          g.gain.setValueAtTime(0.3, t);
+          g.gain.setValueAtTime(0, t + durs[i] * 0.85);
+          o.start(t);
+          o.stop(t + durs[i]);
+          t += durs[i];
+        });
+      }
+
+      function playGameOverJingle() {
+        stopBGM();
+        const notes = [392, 370, 349, 330, 311, 277, 220];
+        let t = AC.currentTime + 0.1;
+        notes.forEach((f) => {
+          const o = AC.createOscillator();
+          const g = AC.createGain();
+          o.type = "sawtooth";
+          o.frequency.value = f;
+          o.connect(g);
+          g.connect(AC.destination);
+          g.gain.setValueAtTime(0.25, t);
+          g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+          o.start(t);
+          o.stop(t + 0.5);
+          t += 0.45;
+        });
+      }
+
+      // ====================== PIXEL ART DRAWING ======================
+      // Samuel: Black, muscular hero with white hair — detailed pixel art
+      function drawSamuel(canvas, frame = 0, hit = false) {
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const s = 4; // bigger pixels
+
+        const bob = frame % 4 < 2 ? 0 : 1; // breathing bob
+
+        const P = {
+          skin: "#4a2200",
+          skinMid: "#3a1a00",
+          skinDark: "#2a1000",
+          skinHi: "#6a3210",
+          hair: "#1a1a2a",
+          hairShad: "#0a0a14",
+          hairGold: "#2a2a3a", // dark hair accent
+          shirt: "#151530",
+          shirtHi: "#252550",
+          jacket: "#0a0a20",
+          jacketHi: "#181838",
+          pants: "#1e3a6a",
+          pantsHi: "#2a4e88",
+          boots: "#0a0a0a",
+          bootsHi: "#222222",
+          belt: "#9b7720",
+          beltHi: "#c8a030",
+          eyeL: "#ff3333",
+          eyeR: "#ff3333",
+          scar: "#ff7755",
+          white: "#ffffff",
+          glow: hit ? "#ff6644" : "transparent",
+          sword: "#aaddff",
+          swordHi: "#eef8ff",
+          swordGlow: "#4488ff",
+          bandana: "#cc0000",
+        };
+
+        if (hit) {
+          ctx.shadowColor = "#ff4400";
+          ctx.shadowBlur = 18;
+        }
+
+        const pix = (x, y, c) => {
+          ctx.fillStyle = c;
+          ctx.fillRect(x * s, (y + bob) * s, s, s);
+        };
+
+        // === DARK HAIR (flowing, wild) ===
+        // Top of hair
+        [
+          [5, 0],
+          [6, 0],
+          [7, 0],
+          [8, 0],
+          [9, 0],
+          [10, 0],
+        ].forEach(([x, y]) => pix(x, y, P.hair));
+        [
+          [4, 1],
+          [5, 1],
+          [6, 1],
+          [7, 1],
+          [8, 1],
+          [9, 1],
+          [10, 1],
+          [11, 1],
+        ].forEach(([x, y]) => pix(x, y, P.hair));
+        [
+          [4, 2],
+          [5, 2],
+          [6, 2],
+          [7, 2],
+          [8, 2],
+          [9, 2],
+          [10, 2],
+          [11, 2],
+          [12, 2],
+        ].forEach(([x, y]) => pix(x, y, P.hair));
+        // Hair sides flowing down
+        [
+          [3, 3],
+          [4, 3],
+          [12, 3],
+          [13, 3],
+        ].forEach(([x, y]) => pix(x, y, P.hair));
+        [
+          [3, 4],
+          [4, 4],
+          [12, 4],
+          [13, 4],
+        ].forEach(([x, y]) => pix(x, y, P.hairShad));
+        [
+          [3, 5],
+          [13, 5],
+        ].forEach(([x, y]) => pix(x, y, P.hairShad));
+        // Gold streak in hair
+        pix(7, 1, P.hairGold);
+        pix(8, 1, P.hairGold);
+        pix(7, 2, P.hairGold);
+
+        // === FACE ===
+        [
+          [5, 3],
+          [6, 3],
+          [7, 3],
+          [8, 3],
+          [9, 3],
+          [10, 3],
+          [11, 3],
+        ].forEach(([x, y]) => pix(x, y, P.skin));
+        [
+          [5, 4],
+          [6, 4],
+          [7, 4],
+          [8, 4],
+          [9, 4],
+          [10, 4],
+          [11, 4],
+        ].forEach(([x, y]) => pix(x, y, P.skin));
+        // Eyes (red, glowing)
+        pix(6, 4, P.eyeL);
+        pix(10, 4, P.eyeR);
+        // Scar across nose/cheek
+        pix(7, 5, P.scar);
+        pix(8, 5, P.scar);
+        // Jaw/lower face
+        [
+          [5, 5],
+          [6, 5],
+          [9, 5],
+          [10, 5],
+          [11, 5],
+        ].forEach(([x, y]) => pix(x, y, P.skin));
+        [
+          [6, 6],
+          [7, 6],
+          [8, 6],
+          [9, 6],
+          [10, 6],
+        ].forEach(([x, y]) => pix(x, y, P.skin));
+        pix(7, 6, P.skinMid);
+        pix(9, 6, P.skinMid);
+        // Stubble
+        pix(7, 7, P.skinDark);
+        pix(8, 7, P.skinDark);
+        pix(9, 7, P.skinDark);
+
+        // === BANDANA (headband) ===
+        [
+          [5, 3],
+          [6, 3],
+          [7, 3],
+          [8, 3],
+          [9, 3],
+          [10, 3],
+          [11, 3],
+        ].forEach(([x, y]) => {
+          // just color over forehead
+        });
+        pix(5, 3, P.bandana);
+        pix(11, 3, P.bandana);
+
+        // === NECK ===
+        pix(7, 8, P.skin);
+        pix(8, 8, P.skin);
+        pix(9, 8, P.skin);
+
+        // === JACKET / CHEST ===
+        // Outer jacket
+        [
+          [4, 9],
+          [5, 9],
+          [6, 9],
+          [7, 9],
+          [8, 9],
+          [9, 9],
+          [10, 9],
+          [11, 9],
+          [12, 9],
+          [13, 9],
+        ].forEach(([x, y]) => pix(x, y, P.jacket));
+        [
+          [3, 10],
+          [4, 10],
+          [5, 10],
+          [6, 10],
+          [7, 10],
+          [8, 10],
+          [9, 10],
+          [10, 10],
+          [11, 10],
+          [12, 10],
+          [13, 10],
+          [14, 10],
+        ].forEach(([x, y]) => pix(x, y, P.jacket));
+        [
+          [3, 11],
+          [4, 11],
+          [5, 11],
+          [6, 11],
+          [7, 11],
+          [8, 11],
+          [9, 11],
+          [10, 11],
+          [11, 11],
+          [12, 11],
+          [13, 11],
+          [14, 11],
+        ].forEach(([x, y]) => pix(x, y, P.jacket));
+        // Shirt under jacket
+        [
+          [6, 9],
+          [7, 9],
+          [8, 9],
+          [9, 9],
+          [10, 9],
+        ].forEach(([x, y]) => pix(x, y, P.shirt));
+        [
+          [6, 10],
+          [7, 10],
+          [8, 10],
+          [9, 10],
+          [10, 10],
+        ].forEach(([x, y]) => pix(x, y, P.shirtHi));
+        // Jacket highlights
+        pix(4, 9, P.jacketHi);
+        pix(5, 9, P.jacketHi);
+        pix(12, 9, P.jacketHi);
+        pix(13, 9, P.jacketHi);
+        pix(3, 10, P.jacketHi);
+        pix(14, 10, P.jacketHi);
+        // Chest muscles hint
+        pix(7, 10, P.shirtHi);
+        pix(8, 10, P.shirt);
+        pix(9, 10, P.shirtHi);
+
+        // === ARMS ===
+        // Left arm
+        [
+          [2, 9],
+          [2, 10],
+          [2, 11],
+          [1, 11],
+          [1, 12],
+        ].forEach(([x, y]) => pix(x, y, P.jacket));
+        pix(2, 9, P.jacketHi);
+        pix(1, 11, P.skin);
+        pix(1, 12, P.skin);
+        pix(0, 12, P.skin);
+        // Right arm (sword arm, extended forward slightly)
+        [
+          [15, 9],
+          [15, 10],
+          [15, 11],
+          [16, 11],
+          [16, 12],
+        ].forEach(([x, y]) => pix(x, y, P.jacket));
+        pix(15, 9, P.jacketHi);
+        pix(16, 11, P.skin);
+        pix(16, 12, P.skin);
+        pix(17, 12, P.skin);
+
+        // === SWORD (right hand) ===
+        // Handle
+        pix(17, 11, P.belt);
+        pix(18, 11, P.belt);
+        // Guard
+        pix(18, 10, P.skinMid);
+        pix(19, 10, P.skinMid);
+        pix(19, 11, P.skinMid);
+        // Blade
+        pix(20, 9, P.sword);
+        pix(20, 10, P.sword);
+        pix(21, 8, P.sword);
+        pix(21, 9, P.swordHi);
+        pix(22, 7, P.swordHi);
+        pix(22, 8, P.sword);
+        pix(23, 6, P.swordHi);
+        // Blade glow edge
+        pix(20, 9, P.swordGlow);
+        if (frame % 2 === 0) {
+          pix(23, 6, P.white);
+        } // flicker
+
+        // === BELT ===
+        [
+          [4, 12],
+          [5, 12],
+          [6, 12],
+          [7, 12],
+          [8, 12],
+          [9, 12],
+          [10, 12],
+          [11, 12],
+          [12, 12],
+          [13, 12],
+        ].forEach(([x, y]) => pix(x, y, P.belt));
+        pix(8, 12, P.beltHi);
+        pix(9, 12, P.beltHi); // buckle
+
+        // === PANTS ===
+        [
+          [4, 13],
+          [5, 13],
+          [6, 13],
+          [7, 13],
+          [8, 13],
+          [9, 13],
+          [10, 13],
+          [11, 13],
+          [12, 13],
+          [13, 13],
+        ].forEach(([x, y]) => pix(x, y, P.pants));
+        [
+          [4, 14],
+          [5, 14],
+          [6, 14],
+          [7, 14],
+          [8, 14],
+          [9, 14],
+          [10, 14],
+          [11, 14],
+          [12, 14],
+          [13, 14],
+        ].forEach(([x, y]) => pix(x, y, P.pants));
+        // Pants seam/highlight
+        pix(5, 13, P.pantsHi);
+        pix(11, 13, P.pantsHi);
+        pix(5, 14, P.pantsHi);
+        pix(11, 14, P.pantsHi);
+        [
+          [4, 15],
+          [5, 15],
+          [6, 15],
+          [7, 15],
+        ].forEach(([x, y]) => pix(x, y, P.pants));
+        [
+          [9, 15],
+          [10, 15],
+          [11, 15],
+          [12, 15],
+        ].forEach(([x, y]) => pix(x, y, P.pants));
+        [
+          [4, 16],
+          [5, 16],
+          [6, 16],
+          [7, 16],
+        ].forEach(([x, y]) => pix(x, y, P.pants));
+        [
+          [9, 16],
+          [10, 16],
+          [11, 16],
+          [12, 16],
+        ].forEach(([x, y]) => pix(x, y, P.pants));
+
+        // === BOOTS ===
+        [
+          [4, 17],
+          [5, 17],
+          [6, 17],
+          [7, 17],
+        ].forEach(([x, y]) => pix(x, y, P.boots));
+        [
+          [9, 17],
+          [10, 17],
+          [11, 17],
+          [12, 17],
+        ].forEach(([x, y]) => pix(x, y, P.boots));
+        [
+          [3, 18],
+          [4, 18],
+          [5, 18],
+          [6, 18],
+          [7, 18],
+          [8, 18],
+        ].forEach(([x, y]) => pix(x, y, P.boots));
+        [
+          [9, 18],
+          [10, 18],
+          [11, 18],
+          [12, 18],
+          [13, 18],
+          [14, 18],
+        ].forEach(([x, y]) => pix(x, y, P.boots));
+        pix(4, 17, P.bootsHi);
+        pix(9, 17, P.bootsHi);
+        pix(3, 18, P.bootsHi);
+        pix(9, 18, P.bootsHi);
+
+        ctx.shadowBlur = 0;
+
+        // Idle shimmer
+        if (frame % 4 === 0) {
+          ctx.fillStyle = "#ffffff08";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+
+      // Boss 1: The Corrupted Knight — detailed heavy armor
+      function drawBoss1(canvas, frame = 0, hit = false, hp_ratio = 1) {
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const s = 4;
+
+        const enraged = hp_ratio < 0.5;
+        const A = enraged ? "#7a0000" : "#2a2a4e";
+        const AH = enraged ? "#cc1111" : "#5050a0";
+        const AL = enraged ? "#440000" : "#18183a";
+        const eye = enraged ? "#ff8800" : "#ff2222";
+        const glow = enraged ? "#ff4400" : "#8888ff";
+        const sword = enraged ? "#ff6600" : "#aaddff";
+        const swordG = enraged ? "#ff2200" : "#4488ff";
+        const shield = "#5a3300";
+        const shieldH = "#8b6600";
+        const bob = frame % 4 < 2 ? 0 : 1;
+
+        if (hit) {
+          ctx.shadowColor = "#ffffff";
+          ctx.shadowBlur = 20;
+        }
+
+        const p = (x, y, c) => {
+          ctx.fillStyle = c;
+          ctx.fillRect(x * s, (y + bob) * s, s, s);
+        };
+
+        // === HELMET ===
+        // Plume
+        p(8, 0, "#880000");
+        p(9, 0, "#aa0000");
+        p(10, 0, "#880000");
+        p(8, 1, "#aa0000");
+        p(9, 1, "#cc0000");
+        p(10, 1, "#aa0000");
+        // Helmet top
+        [
+          [7, 2],
+          [8, 2],
+          [9, 2],
+          [10, 2],
+          [11, 2],
+          [12, 2],
+          [13, 2],
+        ].forEach(([x, y]) => p(x, y, A));
+        [
+          [6, 3],
+          [7, 3],
+          [8, 3],
+          [9, 3],
+          [10, 3],
+          [11, 3],
+          [12, 3],
+          [13, 3],
+          [14, 3],
+        ].forEach(([x, y]) => p(x, y, A));
+        p(7, 3, AH);
+        p(13, 3, AH);
+        // Visor slot
+        [
+          [6, 4],
+          [7, 4],
+          [8, 4],
+          [9, 4],
+          [10, 4],
+          [11, 4],
+          [12, 4],
+          [13, 4],
+          [14, 4],
+        ].forEach(([x, y]) => p(x, y, A));
+        p(8, 4, "#222");
+        p(9, 4, eye);
+        p(10, 4, glow);
+        p(11, 4, eye);
+        p(12, 4, "#222");
+        p(7, 4, AH);
+        p(13, 4, AH);
+        // Chin guard
+        [
+          [7, 5],
+          [8, 5],
+          [9, 5],
+          [10, 5],
+          [11, 5],
+          [12, 5],
+          [13, 5],
+        ].forEach(([x, y]) => p(x, y, A));
+        p(8, 5, "#333");
+        p(9, 5, "#333");
+        p(11, 5, "#333");
+        p(12, 5, "#333");
+        // Gorget (neck armor)
+        [
+          [8, 6],
+          [9, 6],
+          [10, 6],
+          [11, 6],
+          [12, 6],
+        ].forEach(([x, y]) => p(x, y, AL));
+        p(8, 6, AH);
+        p(12, 6, AH);
+
+        // === SHOULDERS (pauldrons) ===
+        // Left shoulder
+        [
+          [3, 7],
+          [4, 7],
+          [5, 7],
+        ].forEach(([x, y]) => p(x, y, A));
+        [
+          [2, 8],
+          [3, 8],
+          [4, 8],
+          [5, 8],
+        ].forEach(([x, y]) => p(x, y, A));
+        p(2, 8, AH);
+        p(3, 7, AH);
+        // Right shoulder (big)
+        [
+          [16, 7],
+          [17, 7],
+          [18, 7],
+        ].forEach(([x, y]) => p(x, y, A));
+        [
+          [15, 8],
+          [16, 8],
+          [17, 8],
+          [18, 8],
+          [19, 8],
+        ].forEach(([x, y]) => p(x, y, A));
+        p(19, 8, AH);
+        p(18, 7, AH);
+
+        // === CHEST ARMOR ===
+        [
+          [5, 7],
+          [6, 7],
+          [7, 7],
+          [8, 7],
+          [9, 7],
+          [10, 7],
+          [11, 7],
+          [12, 7],
+          [13, 7],
+          [14, 7],
+          [15, 7],
+        ].forEach(([x, y]) => p(x, y, A));
+        [
+          [4, 8],
+          [5, 8],
+          [6, 8],
+          [7, 8],
+          [8, 8],
+          [9, 8],
+          [10, 8],
+          [11, 8],
+          [12, 8],
+          [13, 8],
+          [14, 8],
+          [15, 8],
+        ].forEach(([x, y]) => p(x, y, A));
+        [
+          [4, 9],
+          [5, 9],
+          [6, 9],
+          [7, 9],
+          [8, 9],
+          [9, 9],
+          [10, 9],
+          [11, 9],
+          [12, 9],
+          [13, 9],
+          [14, 9],
+          [15, 9],
+        ].forEach(([x, y]) => p(x, y, A));
+        [
+          [5, 10],
+          [6, 10],
+          [7, 10],
+          [8, 10],
+          [9, 10],
+          [10, 10],
+          [11, 10],
+          [12, 10],
+          [13, 10],
+          [14, 10],
+        ].forEach(([x, y]) => p(x, y, A));
+        // Chest emblem (glowing rune)
+        p(9, 8, glow);
+        p(10, 8, glow);
+        p(11, 8, glow);
+        p(9, 9, glow);
+        p(11, 9, glow);
+        // Chest highlight
+        p(5, 7, AH);
+        p(15, 7, AH);
+        p(4, 8, AH);
+        p(15, 8, AH);
+
+        // === ARMS ===
+        // Left arm (holding shield)
+        [
+          [2, 9],
+          [3, 9],
+          [4, 9],
+        ].forEach(([x, y]) => p(x, y, A));
+        [
+          [1, 10],
+          [2, 10],
+          [3, 10],
+        ].forEach(([x, y]) => p(x, y, A));
+        [
+          [1, 11],
+          [2, 11],
+        ].forEach(([x, y]) => p(x, y, A));
+        // Right arm (sword arm)
+        [
+          [16, 9],
+          [17, 9],
+          [18, 9],
+        ].forEach(([x, y]) => p(x, y, A));
+        [
+          [17, 10],
+          [18, 10],
+          [19, 10],
+        ].forEach(([x, y]) => p(x, y, A));
+        [
+          [18, 11],
+          [19, 11],
+        ].forEach(([x, y]) => p(x, y, A));
+
+        // === SHIELD (left) ===
+        [
+          [0, 8],
+          [0, 9],
+          [0, 10],
+          [0, 11],
+          [0, 12],
+        ].forEach(([x, y]) => p(x, y, shield));
+        p(0, 8, shieldH);
+        p(0, 12, shieldH);
+        // Shield emblem
+        p(0, 9, glow + "88" || "#8888ff88");
+        p(0, 10, glow);
+
+        // === SWORD (right, raised) ===
+        // Handle
+        p(20, 10, "#6a5000");
+        p(20, 9, "#6a5000");
+        // Guard
+        p(19, 9, A);
+        p(20, 8, A);
+        p(21, 9, A);
+        // Blade
+        p(20, 7, sword);
+        p(21, 7, sword);
+        p(21, 6, sword);
+        p(22, 6, swordG);
+        p(22, 5, swordG);
+        p(23, 4, swordG);
+        p(23, 3, "#ffffff");
+        // Energy crack on blade
+        if (enraged) {
+          p(21, 6, "#ff6600");
+          p(22, 5, "#ff4400");
+        }
+        if (frame % 2 === 0) p(23, 3, enraged ? "#ff8800" : "#ffffff");
+
+        // === WAIST / TASSETS ===
+        [
+          [5, 11],
+          [6, 11],
+          [7, 11],
+          [8, 11],
+          [9, 11],
+          [10, 11],
+          [11, 11],
+          [12, 11],
+          [13, 11],
+          [14, 11],
+        ].forEach(([x, y]) => p(x, y, AL));
+        p(7, 11, A);
+        p(12, 11, A);
+
+        // === LEGS ===
+        [
+          [5, 12],
+          [6, 12],
+          [7, 12],
+          [8, 12],
+        ].forEach(([x, y]) => p(x, y, A));
+        [
+          [11, 12],
+          [12, 12],
+          [13, 12],
+          [14, 12],
+        ].forEach(([x, y]) => p(x, y, A));
+        [
+          [5, 13],
+          [6, 13],
+          [7, 13],
+          [8, 13],
+        ].forEach(([x, y]) => p(x, y, A));
+        [
+          [11, 13],
+          [12, 13],
+          [13, 13],
+          [14, 13],
+        ].forEach(([x, y]) => p(x, y, A));
+        p(5, 12, AH);
+        p(14, 12, AH);
+
+        // === GREAVES (shin armor) ===
+        [
+          [5, 14],
+          [6, 14],
+          [7, 14],
+          [8, 14],
+        ].forEach(([x, y]) => p(x, y, AL));
+        [
+          [11, 14],
+          [12, 14],
+          [13, 14],
+          [14, 14],
+        ].forEach(([x, y]) => p(x, y, AL));
+        // Sabatons (boot armor)
+        [
+          [4, 15],
+          [5, 15],
+          [6, 15],
+          [7, 15],
+          [8, 15],
+          [9, 15],
+        ].forEach(([x, y]) => p(x, y, A));
+        [
+          [10, 15],
+          [11, 15],
+          [12, 15],
+          [13, 15],
+          [14, 15],
+          [15, 15],
+        ].forEach(([x, y]) => p(x, y, A));
+        p(4, 15, AH);
+        p(10, 15, AH);
+
+        // Glow under feet
+        if (enraged) {
+          ctx.fillStyle = "#ff220022";
+          ctx.fillRect(4 * s, 15 * s + s, 12 * s, 3);
+        }
+
+        ctx.shadowBlur = 0;
+      }
+
+      // Boss 2: Shadow Mage — dark sorcerer with flowing robes
+      function drawBoss2(canvas, frame = 0, hit = false, hp_ratio = 1) {
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const s = 4;
+
+        const enraged = hp_ratio < 0.5;
+        const robe = enraged ? "#1e0040" : "#0a0020";
+        const robeH = enraged ? "#5500cc" : "#2a0088";
+        const robeL = enraged ? "#0d0020" : "#060010";
+        const hat = enraged ? "#3a0066" : "#110033";
+        const hatH = enraged ? "#7700dd" : "#330088";
+        const skin = "#c0a080";
+        const skinD = "#907050";
+        const eye = enraged ? "#ff00ff" : "#00ccff";
+        const orb = enraged ? "#ff44ff" : "#44ffff";
+        const orbG = enraged ? "#ff00cc" : "#00ffff";
+        const staff = "#553311";
+        const staffH = "#887744";
+        const beard = "#ddddf8";
+        const rune = enraged ? "#ff00ff" : "#8844ff";
+
+        const float = Math.floor(frame / 2) % 2; // slow float
+
+        if (hit) {
+          ctx.shadowColor = "#ff00ff";
+          ctx.shadowBlur = 24;
+        }
+
+        const p = (x, y, c) => {
+          ctx.fillStyle = c;
+          ctx.fillRect(x * s, (y + float) * s, s, s);
+        };
+
+        // === WIZARD HAT ===
+        // Tip
+        p(10, 0, hat);
+        p(11, 0, hat);
+        p(9, 1, hat);
+        p(10, 1, hatH);
+        p(11, 1, hat);
+        [
+          [8, 2],
+          [9, 2],
+          [10, 2],
+          [11, 2],
+          [12, 2],
+        ].forEach(([x, y]) => p(x, y, hat));
+        p(9, 2, hatH);
+        p(11, 2, hatH);
+        [
+          [7, 3],
+          [8, 3],
+          [9, 3],
+          [10, 3],
+          [11, 3],
+          [12, 3],
+          [13, 3],
+        ].forEach(([x, y]) => p(x, y, hat));
+        // Brim
+        [
+          [5, 4],
+          [6, 4],
+          [7, 4],
+          [8, 4],
+          [9, 4],
+          [10, 4],
+          [11, 4],
+          [12, 4],
+          [13, 4],
+          [14, 4],
+          [15, 4],
+        ].forEach(([x, y]) => p(x, y, robeH));
+        // Rune on hat
+        p(10, 3, rune);
+        p(10, 2, rune);
+
+        // === FACE ===
+        [
+          [7, 5],
+          [8, 5],
+          [9, 5],
+          [10, 5],
+          [11, 5],
+          [12, 5],
+          [13, 5],
+        ].forEach(([x, y]) => p(x, y, skin));
+        // Eyes
+        p(8, 6, eye);
+        p(9, 6, skin);
+        p(11, 6, eye);
+        p(12, 6, skin);
+        // Glowing pupils
+        if (frame % 2 === 0) {
+          p(8, 6, orb);
+          p(11, 6, orb);
+        }
+        [
+          [7, 6],
+          [13, 6],
+        ].forEach(([x, y]) => p(x, y, skin));
+        [
+          [8, 7],
+          [9, 7],
+          [10, 7],
+          [11, 7],
+          [12, 7],
+        ].forEach(([x, y]) => p(x, y, skin));
+        p(9, 7, skinD);
+        p(11, 7, skinD); // nose shadow
+
+        // === BEARD ===
+        [
+          [8, 8],
+          [9, 8],
+          [10, 8],
+          [11, 8],
+          [12, 8],
+        ].forEach(([x, y]) => p(x, y, beard));
+        [
+          [9, 9],
+          [10, 9],
+          [11, 9],
+        ].forEach(([x, y]) => p(x, y, beard));
+        p(10, 10, beard);
+
+        // === ROBE BODY ===
+        [
+          [6, 9],
+          [7, 9],
+          [8, 9],
+          [9, 9],
+          [10, 9],
+          [11, 9],
+          [12, 9],
+          [13, 9],
+          [14, 9],
+        ].forEach(([x, y]) => p(x, y, robe));
+        [
+          [5, 10],
+          [6, 10],
+          [7, 10],
+          [8, 10],
+          [9, 10],
+          [10, 10],
+          [11, 10],
+          [12, 10],
+          [13, 10],
+          [14, 10],
+          [15, 10],
+        ].forEach(([x, y]) => p(x, y, robe));
+        [
+          [4, 11],
+          [5, 11],
+          [6, 11],
+          [7, 11],
+          [8, 11],
+          [9, 11],
+          [10, 11],
+          [11, 11],
+          [12, 11],
+          [13, 11],
+          [14, 11],
+          [15, 11],
+          [16, 11],
+        ].forEach(([x, y]) => p(x, y, robe));
+        [
+          [3, 12],
+          [4, 12],
+          [5, 12],
+          [6, 12],
+          [7, 12],
+          [8, 12],
+          [9, 12],
+          [10, 12],
+          [11, 12],
+          [12, 12],
+          [13, 12],
+          [14, 12],
+          [15, 12],
+          [16, 12],
+          [17, 12],
+        ].forEach(([x, y]) => p(x, y, robe));
+        // Robe highlights (light catching folds)
+        p(6, 9, robeH);
+        p(14, 9, robeH);
+        p(5, 10, robeH);
+        p(15, 10, robeH);
+        p(4, 11, robeH);
+        p(16, 11, robeH);
+        // Rune patterns on robe
+        p(9, 10, rune);
+        p(11, 10, rune);
+        p(8, 11, rune);
+        p(12, 11, rune);
+
+        // === STAFF ARM (left) ===
+        [
+          [5, 9],
+          [5, 10],
+          [4, 10],
+          [4, 11],
+          [3, 11],
+        ].forEach(([x, y]) => p(x, y, skin));
+        // Staff
+        [
+          [2, 5],
+          [2, 6],
+          [2, 7],
+          [2, 8],
+          [2, 9],
+          [2, 10],
+          [2, 11],
+          [2, 12],
+          [2, 13],
+        ].forEach(([x, y]) => p(x, y, staff));
+        p(2, 5, staffH);
+        p(2, 8, staffH);
+        p(2, 11, staffH);
+        // Orb at top of staff
+        p(1, 3, orbG);
+        p(2, 3, orb);
+        p(3, 3, orbG);
+        p(1, 4, orb);
+        p(2, 4, orbG);
+        p(3, 4, orb);
+        p(2, 2, orb);
+        // Orb glow
+        if (frame % 2 === 0) {
+          ctx.fillStyle = orbG + "44";
+          ctx.beginPath();
+          ctx.arc(2.5 * s, (3.5 + float) * s, 2.5 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // === FLOWING ROBE BOTTOM ===
+        [
+          [4, 13],
+          [5, 13],
+          [6, 13],
+          [7, 13],
+          [8, 13],
+          [9, 13],
+          [10, 13],
+          [11, 13],
+          [12, 13],
+          [13, 13],
+          [14, 13],
+          [15, 13],
+          [16, 13],
+        ].forEach(([x, y]) => p(x, y, robe));
+        p(4, 13, robeH);
+        p(16, 13, robeH);
+        [
+          [5, 14],
+          [6, 14],
+          [7, 14],
+          [8, 14],
+        ].forEach(([x, y]) => p(x, y, robe));
+        [
+          [11, 14],
+          [12, 14],
+          [13, 14],
+          [14, 14],
+        ].forEach(([x, y]) => p(x, y, robe));
+        [
+          [5, 15],
+          [6, 15],
+          [7, 15],
+        ].forEach(([x, y]) => p(x, y, robeL));
+        [
+          [12, 15],
+          [13, 15],
+          [14, 15],
+        ].forEach(([x, y]) => p(x, y, robeL));
+
+        ctx.shadowBlur = 0;
+      }
+
+      // Boss 3: The Warlord Dragon — massive and terrifying
+      function drawBoss3(canvas, frame = 0, hit = false, hp_ratio = 1) {
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const s = 4;
+
+        const enraged = hp_ratio < 0.4;
+        const SC = enraged ? "#8b0000" : "#1a3300";
+        const SCH = enraged ? "#dd0000" : "#336600";
+        const SCL = enraged ? "#550000" : "#0f2200";
+        const wing = enraged ? "#660000" : "#112200";
+        const wingH = enraged ? "#990000" : "#1a3300";
+        const belly = enraged ? "#552200" : "#2a1a00";
+        const bellyH = enraged ? "#774400" : "#3a2800";
+        const eye = enraged ? "#ff6600" : "#ff4400";
+        const eyeG = enraged ? "#ff3300" : "#ff8800";
+        const horn = enraged ? "#662200" : "#333344";
+        const hornH = "#666688";
+        const tooth = "#eeeecc";
+        const fire = "#ff6600";
+        const fireY = "#ffcc00";
+
+        const bob = frame % 4 < 2 ? 0 : 1;
+
+        if (hit) {
+          ctx.shadowColor = "#ff6600";
+          ctx.shadowBlur = 28;
+        }
+
+        const p = (x, y, c) => {
+          ctx.fillStyle = c;
+          ctx.fillRect(x * s, (y + bob) * s, s, s);
+        };
+
+        // === WINGS (left) ===
+        [
+          [0, 3],
+          [1, 3],
+          [2, 3],
+          [3, 3],
+        ].forEach(([x, y]) => p(x, y, wing));
+        [
+          [0, 2],
+          [1, 2],
+          [2, 2],
+          [0, 4],
+          [1, 4],
+          [2, 4],
+          [3, 4],
+        ].forEach(([x, y]) => p(x, y, wing));
+        [
+          [0, 1],
+          [1, 1],
+          [2, 1],
+        ].forEach(([x, y]) => p(x, y, wingH));
+        p(0, 0, wingH);
+        p(1, 0, wing);
+        // Wing membrane lines
+        p(1, 2, wingH);
+        p(1, 3, wingH);
+        p(2, 4, wingH);
+
+        // === WINGS (right) ===
+        [
+          [26, 3],
+          [27, 3],
+          [28, 3],
+          [29, 3],
+          [30, 3],
+        ].forEach(([x, y]) => p(x, y, wing));
+        [
+          [27, 2],
+          [28, 2],
+          [29, 2],
+          [30, 2],
+          [29, 4],
+          [30, 4],
+          [28, 4],
+        ].forEach(([x, y]) => p(x, y, wing));
+        [
+          [28, 1],
+          [29, 1],
+          [30, 1],
+          [31, 1],
+        ].forEach(([x, y]) => p(x, y, wingH));
+        p(30, 0, wingH);
+        p(31, 0, wing);
+        p(31, 1, wingH);
+
+        // === HORNS ===
+        p(9, 0, horn);
+        p(10, 0, hornH);
+        p(10, 1, horn);
+        p(8, 1, horn);
+        p(9, 1, hornH);
+        p(18, 0, horn);
+        p(17, 0, hornH);
+        p(17, 1, horn);
+        p(19, 1, horn);
+        p(18, 1, hornH);
+
+        // === HEAD ===
+        [
+          [8, 2],
+          [9, 2],
+          [10, 2],
+          [11, 2],
+          [12, 2],
+          [13, 2],
+          [14, 2],
+          [15, 2],
+          [16, 2],
+          [17, 2],
+          [18, 2],
+          [19, 2],
+        ].forEach(([x, y]) => p(x, y, SC));
+        p(9, 2, SCH);
+        p(18, 2, SCH);
+        [
+          [7, 3],
+          [8, 3],
+          [9, 3],
+          [10, 3],
+          [11, 3],
+          [12, 3],
+          [13, 3],
+          [14, 3],
+          [15, 3],
+          [16, 3],
+          [17, 3],
+          [18, 3],
+          [19, 3],
+          [20, 3],
+        ].forEach(([x, y]) => p(x, y, SC));
+        // Eyes
+        p(10, 3, eye);
+        p(11, 3, eyeG);
+        p(16, 3, eyeG);
+        p(17, 3, eye);
+        if (frame % 2 === 0) {
+          p(10, 3, "#ffaa00");
+          p(17, 3, "#ffaa00");
+        }
+        // Snout
+        [
+          [7, 4],
+          [8, 4],
+          [9, 4],
+          [10, 4],
+          [11, 4],
+          [12, 4],
+          [13, 4],
+          [14, 4],
+          [15, 4],
+          [16, 4],
+          [17, 4],
+          [18, 4],
+          [19, 4],
+          [20, 4],
+          [21, 4],
+        ].forEach(([x, y]) => p(x, y, SC));
+        p(7, 4, SCH);
+        p(21, 4, SCH);
+        // Nostril
+        p(12, 4, "#110000");
+        p(15, 4, "#110000");
+        // Jaw (open slightly)
+        [
+          [8, 5],
+          [9, 5],
+          [10, 5],
+          [11, 5],
+          [12, 5],
+          [13, 5],
+          [14, 5],
+          [15, 5],
+          [16, 5],
+          [17, 5],
+          [18, 5],
+          [19, 5],
+          [20, 5],
+        ].forEach(([x, y]) => p(x, y, belly));
+        // Teeth
+        p(10, 5, tooth);
+        p(12, 5, tooth);
+        p(15, 5, tooth);
+        p(17, 5, tooth);
+        // Tongue / fire breath hint
+        if (enraged && frame % 2 === 0) {
+          p(13, 5, fire);
+          p(14, 5, fireY);
+          p(13, 6, fireY);
+          p(14, 6, fire);
+          p(12, 6, fire);
+        }
+
+        // === NECK ===
+        [
+          [10, 6],
+          [11, 6],
+          [12, 6],
+          [13, 6],
+          [14, 6],
+          [15, 6],
+          [16, 6],
+          [17, 6],
+        ].forEach(([x, y]) => p(x, y, SC));
+        p(10, 6, SCH);
+        p(17, 6, SCH);
+        [
+          [9, 5],
+          [9, 6],
+        ].forEach(([x, y]) => p(x, y, SCL));
+
+        // === BODY ===
+        [
+          [5, 7],
+          [6, 7],
+          [7, 7],
+          [8, 7],
+          [9, 7],
+          [10, 7],
+          [11, 7],
+          [12, 7],
+          [13, 7],
+          [14, 7],
+          [15, 7],
+          [16, 7],
+          [17, 7],
+          [18, 7],
+          [19, 7],
+          [20, 7],
+          [21, 7],
+          [22, 7],
+        ].forEach(([x, y]) => p(x, y, SC));
+        // Belly scales
+        [
+          [8, 7],
+          [9, 7],
+          [10, 7],
+          [11, 7],
+          [12, 7],
+          [13, 7],
+          [14, 7],
+          [15, 7],
+          [16, 7],
+          [17, 7],
+        ].forEach(([x, y]) => p(x, y, belly));
+        p(5, 7, SCH);
+        p(22, 7, SCH);
+
+        [
+          [4, 8],
+          [5, 8],
+          [6, 8],
+          [7, 8],
+          [8, 8],
+          [9, 8],
+          [10, 8],
+          [11, 8],
+          [12, 8],
+          [13, 8],
+          [14, 8],
+          [15, 8],
+          [16, 8],
+          [17, 8],
+          [18, 8],
+          [19, 8],
+          [20, 8],
+          [21, 8],
+          [22, 8],
+          [23, 8],
+        ].forEach(([x, y]) => p(x, y, SC));
+        [
+          [7, 8],
+          [8, 8],
+          [9, 8],
+          [10, 8],
+          [11, 8],
+          [12, 8],
+          [13, 8],
+          [14, 8],
+          [15, 8],
+          [16, 8],
+          [17, 8],
+          [18, 8],
+        ].forEach(([x, y]) => p(x, y, belly));
+        p(4, 8, SCH);
+        p(23, 8, SCH);
+
+        [
+          [5, 9],
+          [6, 9],
+          [7, 9],
+          [8, 9],
+          [9, 9],
+          [10, 9],
+          [11, 9],
+          [12, 9],
+          [13, 9],
+          [14, 9],
+          [15, 9],
+          [16, 9],
+          [17, 9],
+          [18, 9],
+          [19, 9],
+          [20, 9],
+          [21, 9],
+        ].forEach(([x, y]) => p(x, y, SC));
+        [
+          [8, 9],
+          [9, 9],
+          [10, 9],
+          [11, 9],
+          [12, 9],
+          [13, 9],
+          [14, 9],
+          [15, 9],
+          [16, 9],
+        ].forEach(([x, y]) => p(x, y, bellyH));
+        // Scale pattern
+        p(7, 8, SCH);
+        p(11, 8, SCH);
+        p(15, 8, SCH);
+        p(19, 8, SCH);
+        p(9, 9, SCH);
+        p(13, 9, SCH);
+        p(17, 9, SCH);
+
+        // === CLAWS ===
+        // Front left claw
+        [
+          [5, 10],
+          [6, 10],
+          [7, 10],
+        ].forEach(([x, y]) => p(x, y, SC));
+        p(4, 11, "#aaa");
+        p(5, 11, "#ccc");
+        p(6, 11, "#aaa");
+        // Front right claw
+        [
+          [20, 10],
+          [21, 10],
+          [22, 10],
+        ].forEach(([x, y]) => p(x, y, SC));
+        p(21, 11, "#aaa");
+        p(22, 11, "#ccc");
+        p(23, 11, "#aaa");
+
+        // === LEGS ===
+        [
+          [7, 10],
+          [8, 10],
+          [9, 10],
+        ].forEach(([x, y]) => p(x, y, SC));
+        [
+          [17, 10],
+          [18, 10],
+          [19, 10],
+        ].forEach(([x, y]) => p(x, y, SC));
+        [
+          [7, 11],
+          [8, 11],
+        ].forEach(([x, y]) => p(x, y, "#555"));
+        [
+          [18, 11],
+          [19, 11],
+        ].forEach(([x, y]) => p(x, y, "#555"));
+
+        // === TAIL ===
+        [
+          [22, 9],
+          [23, 9],
+          [24, 9],
+          [25, 9],
+          [26, 9],
+        ].forEach(([x, y]) => p(x, y, SC));
+        p(22, 9, SCH);
+        [
+          [25, 10],
+          [26, 10],
+          [27, 10],
+        ].forEach(([x, y]) => p(x, y, SC));
+        p(27, 11, SCL);
+        p(28, 11, "#555");
+
+        ctx.shadowBlur = 0;
+
+        // Fire breath glow under dragon when enraged
+        if (enraged) {
+          ctx.fillStyle = "#ff220018";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+
+      function makeStars(canvas, n = 100) {
+        const ctx = canvas.getContext("2d");
+        canvas.width = canvas.offsetWidth || 700;
+        canvas.height = canvas.offsetHeight || 300;
+        ctx.fillStyle = "transparent";
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < n; i++) {
+          const x = Math.random() * canvas.width;
+          const y = Math.random() * canvas.height * 0.7; // stars only in sky area
+          const r = Math.random() * 2;
+          const alpha = 0.2 + Math.random() * 0.8;
+          const hue =
+            Math.random() < 0.2
+              ? `rgba(180,180,255,${alpha})`
+              : `rgba(255,255,255,${alpha})`;
+          ctx.fillStyle = hue;
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Draw glowing horizon line
+        const grad = ctx.createLinearGradient(
+          0,
+          canvas.height * 0.55,
+          0,
+          canvas.height * 0.75,
+        );
+        grad.addColorStop(0, "rgba(80,40,180,0.0)");
+        grad.addColorStop(0.5, "rgba(80,40,180,0.15)");
+        grad.addColorStop(1, "rgba(20,0,60,0.3)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(
+          0,
+          canvas.height * 0.55,
+          canvas.width,
+          canvas.height * 0.45,
+        );
+      }
+
+      // ====================== GAME STATE ======================
+      const BOSSES = [
+        {
+          name: "CAVALEIRO CORROMPIDO",
+          title: "O Guardião das Trevas",
+          hp: 120,
+          maxHp: 120,
+          atk: 15,
+          def: 5,
+          phase2Hp: 60,
+          phase2: false,
+          color: "#6666ff",
+          xp: 80,
+          loot: "⚔️ Fragmento de Armadura Sombria",
+          skills: [
+            {
+              name: "Golpe Sombrio",
+              dmg: 20,
+              mp: 0,
+              chance: 0.3,
+              msg: "usa GOLPE SOMBRIO!",
+            },
+            {
+              name: "Investida Pesada",
+              dmg: 32,
+              mp: 0,
+              chance: 0.2,
+              msg: "usa INVESTIDA PESADA! CRÍTICO!",
+            },
+            {
+              name: "Defesa Total",
+              dmg: 0,
+              mp: 0,
+              chance: 0.15,
+              msg: "se prepara e DEFENDE!",
+              effect: "defend",
+            },
+            {
+              name: "Maldição",
+              dmg: 18,
+              mp: 0,
+              chance: 0.2,
+              msg: "lança MALDIÇÃO! Queimando...",
+              status: "burn",
+            },
+            {
+              name: "Ataque Normal",
+              dmg: 22,
+              mp: 0,
+              chance: 0.15,
+              msg: "ataca com a espada!",
+            },
+          ],
+        },
+        {
+          name: "MAGO DAS SOMBRAS",
+          title: "O Senhor da Escuridão",
+          hp: 180,
+          maxHp: 180,
+          atk: 20,
+          def: 6,
+          phase2Hp: 90,
+          phase2: false,
+          color: "#cc44ff",
+          xp: 120,
+          loot: "✨ Orbe de Poder Arcano",
+          skills: [
+            {
+              name: "Bola de Sombra",
+              dmg: 28,
+              mp: 0,
+              chance: 0.3,
+              msg: "conjura BOLA DE SOMBRA!",
+            },
+            {
+              name: "Raio Arcano",
+              dmg: 30,
+              mp: 0,
+              chance: 0.2,
+              msg: "dispara RAIO ARCANO! É devastador!",
+            },
+            {
+              name: "Teleporte",
+              dmg: 0,
+              mp: 0,
+              chance: 0.15,
+              msg: "TELEPORTA! Evitou o ataque!",
+              effect: "dodge",
+            },
+            {
+              name: "Drenar Magia",
+              dmg: 20,
+              mp: 0,
+              chance: 0.2,
+              msg: "drena sua ENERGIA MÁGICA!",
+              effect: "drain_mp",
+            },
+            {
+              name: "Congelar",
+              dmg: 22,
+              mp: 0,
+              chance: 0.15,
+              msg: "lança um feitiço CONGELANTE!",
+              status: "freeze",
+            },
+          ],
+        },
+        {
+          name: "DRAGÃO DA GUERRA",
+          title: "O Senhor Supremo",
+          hp: 260,
+          maxHp: 260,
+          atk: 10,
+          def: 5,
+          phase2Hp: 130,
+          phase2: false,
+          color: "#ff4400",
+          xp: 200,
+          loot: "🏆 PRÊMIO DE HONRA SUPREMO",
+          skills: [
+            {
+              name: "Bafo de Fogo",
+              dmg: 35,
+              mp: 0,
+              chance: 0.25,
+              msg: "solta BAFO DE FOGO! QUEIMANDO!",
+              status: "burn",
+            },
+            {
+              name: "Mordida de Dragão",
+              dmg: 32,
+              mp: 0,
+              chance: 0.2,
+              msg: "usa MORDIDA DE DRAGÃO! CRÍTICO BRUTAL!",
+            },
+            {
+              name: "Rugido Terror",
+              dmg: 22,
+              mp: 0,
+              chance: 0.15,
+              msg: "solta um RUGIDO aterrorizante! Stunado!",
+              status: "stun",
+            },
+            {
+              name: "Garras Dracônicas",
+              dmg: 35,
+              mp: 0,
+              chance: 0.2,
+              msg: "usa GARRAS DRACÔNICAS!",
+            },
+            {
+              name: "Cauda Devastadora",
+              dmg: 30,
+              mp: 0,
+              chance: 0.2,
+              msg: "acerta com a CAUDA ENORME!",
+            },
+          ],
+        },
+      ];
+
+      const SAMUEL = {
+        hp: 120,
+        maxHp: 120,
+        mp: 70,
+        maxMp: 70,
+        atk: 32,
+        def: 12,
+        defending: false,
+        status: null,
+        statusTurns: 0,
+        items: 3,
+      };
+
+      let gameState = {
+        samuel: null,
+        boss: null,
+        bossIndex: 0,
+        playerTurn: true,
+        busy: false,
+        animFrame: 0,
+        animInterval: null,
+      };
+
+      function deepClone(o) {
+        return JSON.parse(JSON.stringify(o));
+      }
+
+      // ====================== GAME INIT ======================
+      function startGame() {
+        AC.resume();
+        gameState.samuel = deepClone(SAMUEL);
+        gameState.bossIndex = 0;
+        gameState.boss = deepClone(BOSSES[0]);
+        gameState.playerTurn = true;
+        gameState.busy = false;
+
+        document.getElementById("screen-title").style.display = "none";
+        document.getElementById("screen-gameover").style.display = "none";
+        document.getElementById("screen-victory").style.display = "none";
+        const sb = document.getElementById("screen-battle");
+        sb.style.display = "flex";
+
+        updateStageIndicator();
+        updateHUD();
+        initBossUI();
+        clearLog();
+        addLog(
+          `⚔️ BOSS ${gameState.bossIndex + 1}: ${gameState.boss.name}`,
+          "info",
+        );
+        addLog(`${gameState.boss.title} aparece na sua frente!`, "boss");
+        addLog(`Samuel está pronto para lutar!`, "info");
+
+        makeStars(document.getElementById("arenaBgCanvas"), 60);
+
+        if (gameState.animInterval) clearInterval(gameState.animInterval);
+        gameState.animInterval = setInterval(() => {
+          gameState.animFrame++;
+          renderCharacters();
+        }, 300);
+
+        playBGM(0);
+      }
+
+      function initBossUI() {
+        const boss = gameState.boss;
+        document.getElementById("bossNameText").textContent = boss.name;
+        document.getElementById("bossHudName").textContent = boss.name;
+        document.getElementById("bossHudName").style.color = boss.color;
+        document.getElementById("bossMaxHpTxt").textContent = boss.maxHp;
+        renderCharacters();
+      }
+
+      function renderCharacters() {
+        const sc = document.getElementById("samuelCanvas");
+        drawSamuel(sc, gameState.animFrame);
+
+        const bc = document.getElementById("bossCanvas");
+        const boss = gameState.boss;
+        const ratio = boss.hp / boss.maxHp;
+        if (gameState.bossIndex === 0)
+          drawBoss1(bc, gameState.animFrame, false, ratio);
+        else if (gameState.bossIndex === 1)
+          drawBoss2(bc, gameState.animFrame, false, ratio);
+        else drawBoss3(bc, gameState.animFrame, false, ratio);
+      }
+
+      function updateStageIndicator() {
+        for (let i = 0; i < 3; i++) {
+          const d = document.getElementById(`d${i + 1}`);
+          d.className = "stage-dot";
+          if (i < gameState.bossIndex) d.classList.add("done");
+          else if (i === gameState.bossIndex) d.classList.add("current");
+        }
+      }
+
+      // ====================== HUD ======================
+      function updateHUD() {
+        const s = gameState.samuel;
+        const b = gameState.boss;
+
+        const shpPct = (s.hp / s.maxHp) * 100;
+        const smpPct = (s.mp / s.maxMp) * 100;
+        document.getElementById("samuelHpBar").style.width = shpPct + "%";
+        document.getElementById("samuelHpBar").className =
+          "hp-bar-fill" +
+          (shpPct < 25 ? " danger" : shpPct < 50 ? " medium" : "");
+        document.getElementById("samuelHpTxt").textContent = Math.max(0, s.hp);
+        document.getElementById("samuelMpBar").style.width = smpPct + "%";
+        document.getElementById("samuelMpTxt").textContent = Math.max(0, s.mp);
+
+        const bhpPct = (b.hp / b.maxHp) * 100;
+        document.getElementById("bossHpBar").style.width = bhpPct + "%";
+        document.getElementById("bossHpTxt").textContent = Math.max(0, b.hp);
+        document.getElementById("bossMiniHp").style.width = bhpPct + "%";
+
+        // Status icons
+        let samStatus = "";
+        if (s.status === "burn")
+          samStatus = '<span class="status-icon status-burn">🔥 Queim.</span>';
+        if (s.status === "freeze")
+          samStatus =
+            '<span class="status-icon status-freeze">❄️ Congelado</span>';
+        if (s.status === "stun")
+          samStatus = '<span class="status-icon status-stun">⚡ Stunado</span>';
+        if (s.defending)
+          samStatus += '<span class="status-icon status-defend">🛡️ Def.</span>';
+        document.getElementById("samuelStatus").innerHTML = samStatus;
+      }
+
+      // ====================== LOG ======================
+      let logQueue = [];
+      let logBusy = false;
+
+      function clearLog() {
+        document.getElementById("battleLog").innerHTML =
+          '<span class="log-cursor"></span>';
+      }
+
+      function addLog(msg, type = "normal", delay = 0) {
+        logQueue.push({ msg, type, delay });
+        if (!logBusy) processLog();
+      }
+
+      function processLog() {
+        if (!logQueue.length) {
+          logBusy = false;
+          return;
+        }
+        logBusy = true;
+        const { msg, type, delay } = logQueue.shift();
+        setTimeout(() => {
+          const log = document.getElementById("battleLog");
+          const div = document.createElement("div");
+          div.className = "log-line " + type;
+          div.textContent = "▶ " + msg;
+          log.insertBefore(div, log.querySelector(".log-cursor"));
+          // Keep last 4 lines
+          const lines = log.querySelectorAll(".log-line");
+          if (lines.length > 4) lines[0].remove();
+          processLog();
+        }, delay + 50);
+      }
+
+      // ====================== HIT EFFECT ======================
+      function showHitNumber(dmg, x, y, color = "#ff4444") {
+        const arena = document.getElementById("battleArena");
+        const el = document.createElement("div");
+        el.className = "hit-effect";
+        el.style.color = color;
+        el.style.left = x + "px";
+        el.style.top = y + "px";
+        el.textContent =
+          dmg === 0 ? "MISS!" : dmg > 0 ? `-${dmg}` : `+${Math.abs(dmg)}`;
+        if (dmg < 0) el.style.color = "#44ff88";
+        arena.appendChild(el);
+        setTimeout(() => el.remove(), 900);
+      }
+
+      function shakeElement(id) {
+        const el = document.getElementById(id);
+        el.classList.remove("shake");
+        void el.offsetWidth;
+        el.classList.add("shake");
+        setTimeout(() => el.classList.remove("shake"), 500);
+      }
+
+      // ====================== ACTIONS ======================
+      function toggleSkillMenu() {
+        const menu = document.getElementById("skillMenu");
+        menu.classList.toggle("open");
+      }
+
+      function closeSkillMenu() {
+        document.getElementById("skillMenu").classList.remove("open");
+      }
+
+      function setButtonsEnabled(enabled) {
+        ["btnAttack", "btnSkill", "btnDefend", "btnItem"].forEach((id) => {
+          document.getElementById(id).disabled = !enabled;
+        });
+      }
+
+      async function playerAction(action) {
+        if (!gameState.playerTurn || gameState.busy) return;
+        closeSkillMenu();
+
+        const s = gameState.samuel;
+        const b = gameState.boss;
+
+        if (s.status === "stun") {
+          addLog("Samuel está STUNADO e não consegue agir!", "miss");
+          s.status = null;
+          updateHUD();
+          await wait(600);
+          await bossAction();
+          return;
+        }
+
+        gameState.busy = true;
+        gameState.playerTurn = false;
+        setButtonsEnabled(false);
+
+        s.defending = false;
+
+        let dmg = 0;
+        let actionMsg = "";
+
+        if (action === "attack") {
+          const crit = Math.random() < 0.2;
+          dmg = Math.max(
+            1,
+            s.atk + Math.floor(Math.random() * 10) - b.def + (crit ? 15 : 0),
+          );
+          if (b.defending) {
+            dmg = Math.floor(dmg * 0.4);
+            actionMsg = `Samuel ataca! (Bloqueado) ${crit ? "CRÍTICO!" : ""}`;
+          } else actionMsg = `Samuel ataca! ${crit ? "🔥 CRÍTICO!" : ""}`;
+          playHit(crit ? "crit" : "normal");
+        } else if (action === "skill_fireball") {
+          if (s.mp < 12) {
+            addLog("MP insuficiente!", "miss");
+            gameState.busy = false;
+            gameState.playerTurn = true;
+            setButtonsEnabled(true);
+            return;
+          }
+          s.mp = Math.max(0, s.mp - 12);
+          dmg = Math.max(
+            5,
+            45 + Math.floor(Math.random() * 15) - Math.floor(b.def * 0.5),
+          );
+          actionMsg = "🔥 Samuel lança BOLA DE FOGO!";
+          playHit("crit");
+        } else if (action === "skill_thunder") {
+          if (s.mp < 18) {
+            addLog("MP insuficiente!", "miss");
+            gameState.busy = false;
+            gameState.playerTurn = true;
+            setButtonsEnabled(true);
+            return;
+          }
+          s.mp = Math.max(0, s.mp - 18);
+          const miss = Math.random() < 0.15;
+          dmg = miss
+            ? 0
+            : Math.max(
+                5,
+                60 + Math.floor(Math.random() * 20) - Math.floor(b.def * 0.3),
+              );
+          actionMsg = miss
+            ? "⚡ RAIO NEGRO... errou!"
+            : "⚡ Samuel invoca RAIO NEGRO! DEVASTADOR!";
+          if (!miss) playHit("crit");
+          else playHit("miss");
+        } else if (action === "skill_heal") {
+          if (s.mp < 8) {
+            addLog("MP insuficiente!", "miss");
+            gameState.busy = false;
+            gameState.playerTurn = true;
+            setButtonsEnabled(true);
+            return;
+          }
+          s.mp = Math.max(0, s.mp - 8);
+          const heal = 25 + Math.floor(Math.random() * 15);
+          s.hp = Math.min(s.maxHp, s.hp + heal);
+          s.status = null;
+          addLog(`💚 Samuel se CURA em ${heal} HP! Status limpo!`, "heal");
+          showHitNumber(-heal, 100, 80, "#44ff88");
+          playHit("heal");
+          updateHUD();
+          await wait(700);
+          await bossAction();
+          return;
+        } else if (action === "skill_drain") {
+          if (s.mp < 22) {
+            addLog("MP insuficiente!", "miss");
+            gameState.busy = false;
+            gameState.playerTurn = true;
+            setButtonsEnabled(true);
+            return;
+          }
+          s.mp = Math.max(0, s.mp - 22);
+          dmg = Math.max(5, 40 + Math.floor(Math.random() * 10));
+          const drain = Math.floor(dmg * 0.4);
+          s.hp = Math.min(s.maxHp, s.hp + drain);
+          actionMsg = `💜 Samuel usa DRENAR VIDA! Recupera ${drain} HP!`;
+          playHit("crit");
+        } else if (action === "skill_determination") {
+          if (s.mp < 35) {
+            addLog("MP insuficiente!", "miss");
+            gameState.busy = false;
+            gameState.playerTurn = true;
+            setButtonsEnabled(true);
+            return;
+          }
+          s.mp = Math.max(0, s.mp - 35);
+          // DETERMINATION: massive damage + screen flash
+          dmg = Math.max(30, 80 + Math.floor(Math.random() * 30));
+          s.status = null; // clears all status
+          actionMsg = `♥ Samuel acessa sua DETERMINAÇÃO! ATAQUE SUPREMO!`;
+          // Flash the battle arena
+          const arena = document.getElementById("battleArena");
+          arena.style.boxShadow = "0 0 60px #ff4444, inset 0 0 60px #ff444422";
+          setTimeout(() => {
+            arena.style.boxShadow = "";
+          }, 600);
+          playHit("crit");
+        } else if (action === "defend") {
+          s.defending = true;
+          addLog("🛡️ Samuel se concentra em DEFENDER!", "heal");
+          s.mp = Math.min(s.maxMp, s.mp + 8);
+          addLog("Recuperou 8 MP!", "heal");
+          updateHUD();
+          await wait(500);
+          await bossAction();
+          return;
+        } else if (action === "item") {
+          if (s.items <= 0) {
+            addLog("Sem itens!", "miss");
+            gameState.busy = false;
+            gameState.playerTurn = true;
+            setButtonsEnabled(true);
+            return;
+          }
+          s.items--;
+          const healAmt = 40 + Math.floor(Math.random() * 20);
+          const mpAmt = 20;
+          s.hp = Math.min(s.maxHp, s.hp + healAmt);
+          s.mp = Math.min(s.maxMp, s.mp + mpAmt);
+          s.status = null;
+          addLog(
+            `🧪 Samuel usa POÇÃO SUPREMA! +${healAmt} HP +${mpAmt} MP! (${s.items} restantes)`,
+            "heal",
+          );
+          showHitNumber(-healAmt, 100, 80, "#44ff88");
+          playHit("heal");
+          updateHUD();
+          await wait(800);
+          await bossAction();
+          return;
+        }
+
+        // Apply damage to boss
+        if (dmg > 0) {
+          b.hp = Math.max(0, b.hp - dmg);
+          addLog(actionMsg, "damage");
+          showHitNumber(dmg, 520, 70);
+          shakeElement("bossPortrait");
+          // Redraw boss hit
+          const bc = document.getElementById("bossCanvas");
+          const ratio = b.hp / b.maxHp;
+          if (gameState.bossIndex === 0)
+            drawBoss1(bc, gameState.animFrame, true, ratio);
+          else if (gameState.bossIndex === 1)
+            drawBoss2(bc, gameState.animFrame, true, ratio);
+          else drawBoss3(bc, gameState.animFrame, true, ratio);
+          setTimeout(renderCharacters, 300);
+        } else if (dmg === 0 && action !== "defend") {
+          addLog(actionMsg || "Ataque errou!", "miss");
+        }
+
+        // Burn status on boss
+        if (action === "skill_fireball" && dmg > 0) {
+          b.burnTurns = 3;
+          addLog("Boss está em CHAMAS! 🔥", "damage");
+        }
+
+        updateHUD();
+        playHit(action.startsWith("skill") ? "crit" : "normal");
+
+        // Check phase 2
+        if (!b.phase2 && b.hp <= b.phase2Hp) {
+          b.phase2 = true;
+          b.atk = Math.floor(b.atk * 1.4);
+          b.def = Math.floor(b.def * 0.8);
+          const alert = document.getElementById("phaseAlert");
+          alert.style.display = "block";
+          alert.textContent = `⚠ FASE 2 ATIVADA! ${b.name} ficou FURIOSO! ⚠`;
+          playHit("boss");
+          addLog(
+            `⚠ ${b.name} entrou na FASE 2! Mais forte e mais rápido!`,
+            "boss",
+          );
+          await wait(1500);
+          alert.style.display = "none";
+        }
+
+        await wait(600);
+
+        if (b.hp <= 0) {
+          await bossDefeated();
+          return;
+        }
+
+        await bossAction();
+      }
+
+      async function bossAction() {
+        const s = gameState.samuel;
+        const b = gameState.boss;
+
+        // Burn damage on boss
+        if (b.burnTurns > 0) {
+          const burnDmg = 12;
+          b.hp = Math.max(0, b.hp - burnDmg);
+          b.burnTurns--;
+          addLog(
+            `🔥 ${b.name} sofre dano de queimadura! -${burnDmg} HP`,
+            "damage",
+          );
+          updateHUD();
+          if (b.hp <= 0) {
+            await bossDefeated();
+            return;
+          }
+          await wait(300);
+        }
+
+        // Status on samuel
+        if (s.status === "burn") {
+          const bdmg = 10;
+          s.hp = Math.max(0, s.hp - bdmg);
+          s.statusTurns--;
+          if (s.statusTurns <= 0) s.status = null;
+          addLog(`🔥 Samuel sofre dano de queimadura! -${bdmg} HP`, "damage");
+          showHitNumber(bdmg, 100, 80);
+          updateHUD();
+          if (s.hp <= 0) {
+            await playerDefeated();
+            return;
+          }
+        }
+
+        // Pick boss skill
+        const roll = Math.random();
+        let cumulative = 0;
+        let chosen = b.skills[b.skills.length - 1];
+        // Phase 2: more aggressive
+        const skills = b.phase2
+          ? [
+              ...b.skills.map((sk) => ({
+                ...sk,
+                chance: sk.dmg > 0 ? sk.chance * 1.3 : sk.chance * 0.5,
+              })),
+            ]
+          : b.skills;
+        for (const sk of skills) {
+          cumulative += sk.chance;
+          if (roll < cumulative) {
+            chosen = sk;
+            break;
+          }
+        }
+
+        addLog(`${b.name} ${chosen.msg}`, "boss");
+        await wait(400);
+
+        if (chosen.effect === "defend") {
+          b.defending = true;
+          addLog(`${b.name} está em modo de DEFESA!`, "boss");
+        } else if (chosen.effect === "dodge") {
+          b.dodging = true;
+          addLog(`${b.name} vai esquivar do próximo ataque!`, "boss");
+        } else if (chosen.effect === "drain_mp") {
+          const mpDrain = 15;
+          s.mp = Math.max(0, s.mp - mpDrain);
+          addLog(`Samuel perdeu ${mpDrain} MP!`, "damage");
+        } else {
+          // Deal damage
+          let dmg = Math.max(
+            1,
+            chosen.dmg +
+              Math.floor(Math.random() * 12) -
+              (s.defending ? s.def * 2 : s.def),
+          );
+          if (s.defending) {
+            dmg = Math.floor(dmg * 0.35);
+            addLog(`🛡️ Samuel bloqueou! Dano reduzido!`, "heal");
+          }
+          s.hp = Math.max(0, s.hp - dmg);
+          showHitNumber(dmg, 100, 80);
+          shakeElement("samuelPortrait");
+          const sc = document.getElementById("samuelCanvas");
+          drawSamuel(sc, gameState.animFrame, true);
+          setTimeout(() => drawSamuel(sc, gameState.animFrame, false), 300);
+          addLog(`Samuel recebeu ${dmg} de dano!`, "damage");
+          playHit("boss");
+
+          if (chosen.status) {
+            s.status = chosen.status;
+            s.statusTurns = 3;
+            const sNames = {
+              burn: "QUEIMANDO 🔥",
+              freeze: "CONGELADO ❄️",
+              stun: "STUNADO ⚡",
+            };
+            addLog(`Samuel ficou ${sNames[chosen.status]}!`, "damage");
+          }
+        }
+
+        b.defending = false;
+        updateHUD();
+        await wait(300);
+
+        if (s.hp <= 0) {
+          await playerDefeated();
+          return;
+        }
+
+        // Restore a bit of boss MP each turn
+        s.mp = Math.min(s.maxMp, s.mp + 4);
+
+        gameState.playerTurn = true;
+        gameState.busy = false;
+        setButtonsEnabled(true);
+        addLog("✦ Sua vez!", "info");
+      }
+
+      async function bossDefeated() {
+        stopBGM();
+        playHit("level");
+        const b = gameState.boss;
+        addLog(`✨ ${b.name} foi DERROTADO!`, "info");
+        await wait(600);
+        addLog(`🎁 Você obteve: ${b.loot}!`, "info");
+        await wait(800);
+
+        const bi = gameState.bossIndex;
+        if (bi < 2) {
+          gameState.bossIndex++;
+          gameState.boss = deepClone(BOSSES[gameState.bossIndex]);
+          // Heal samuel a bit between bosses
+          gameState.samuel.hp = Math.min(
+            gameState.samuel.maxHp,
+            gameState.samuel.hp + 35,
+          );
+          gameState.samuel.mp = Math.min(
+            gameState.samuel.maxMp,
+            gameState.samuel.mp + 25,
+          );
+          gameState.samuel.status = null;
+          gameState.samuel.defending = false;
+          await wait(800);
+          addLog(`💊 Samuel recuperou 35 HP e 25 MP!`, "heal");
+          await wait(500);
+          updateStageIndicator();
+          initBossUI();
+          updateHUD();
+          addLog(
+            `⚔️ BOSS ${gameState.bossIndex + 1}: ${gameState.boss.name}`,
+            "info",
+          );
+          addLog(`${gameState.boss.title} surge das sombras!`, "boss");
+          playBGM(gameState.bossIndex);
+          gameState.playerTurn = true;
+          gameState.busy = false;
+          setButtonsEnabled(true);
+        } else {
+          // Victory!
+          await showVictory();
+        }
+      }
+
+      async function playerDefeated() {
+        stopBGM();
+        playGameOverJingle();
+        addLog("💀 Samuel foi derrotado...", "damage");
+        await wait(1000);
+        setButtonsEnabled(false);
+        clearInterval(gameState.animInterval);
+        document.getElementById("screen-battle").style.display = "none";
+        document.getElementById("screen-gameover").style.display = "flex";
+      }
+
+      async function showVictory() {
+        clearInterval(gameState.animInterval);
+        document.getElementById("screen-battle").style.display = "none";
+        const vs = document.getElementById("screen-victory");
+        vs.style.display = "flex";
+
+        // Draw victory samuel
+        const vc = document.getElementById("victoryCharCanvas");
+        drawSamuel(vc, 0);
+
+        startConfetti();
+        await wait(300);
+        playVictoryJingle();
+      }
+
+      function restartGame() {
+        stopConfetti();
+        document.getElementById("screen-victory").style.display = "none";
+        document.getElementById("screen-gameover").style.display = "none";
+        document.getElementById("screen-title").style.display = "flex";
+        // Redraw title char
+        drawSamuel(document.getElementById("titleCharCanvas"), 0);
+      }
+
+      function wait(ms) {
+        return new Promise((r) => setTimeout(r, ms));
+      }
+
+      // ====================== CONFETTI ======================
+      let confettiAnim = null;
+      let confettiParticles = [];
+
+      function startConfetti() {
+        const canvas = document.getElementById("confettiCanvas");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const ctx = canvas.getContext("2d");
+        confettiParticles = [];
+        for (let i = 0; i < 120; i++) {
+          confettiParticles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height - canvas.height,
+            w: 8 + Math.random() * 8,
+            h: 4 + Math.random() * 4,
+            color: [
+              "#ffe066",
+              "#ff88cc",
+              "#44ff88",
+              "#4488ff",
+              "#ff4444",
+              "#cc44ff",
+            ][Math.floor(Math.random() * 6)],
+            vx: (Math.random() - 0.5) * 2,
+            vy: 2 + Math.random() * 3,
+            angle: Math.random() * Math.PI * 2,
+            va: (Math.random() - 0.5) * 0.1,
+          });
+        }
+        function drawConfetti() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          confettiParticles.forEach((p) => {
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.angle);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+            ctx.restore();
+            p.x += p.vx;
+            p.y += p.vy;
+            p.angle += p.va;
+            if (p.y > canvas.height) {
+              p.y = -10;
+              p.x = Math.random() * canvas.width;
+            }
+          });
+          confettiAnim = requestAnimationFrame(drawConfetti);
+        }
+        drawConfetti();
+      }
+
+      function stopConfetti() {
+        if (confettiAnim) cancelAnimationFrame(confettiAnim);
+        const canvas = document.getElementById("confettiCanvas");
+        if (canvas)
+          canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      // ====================== TITLE STARS ======================
+      function initTitleStars() {
+        const canvas = document.getElementById("starCanvas");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const ctx = canvas.getContext("2d");
+        const stars = Array.from({ length: 150 }, () => ({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          r: Math.random() * 2,
+          speed: 0.2 + Math.random() * 0.5,
+          alpha: 0.3 + Math.random() * 0.7,
+          da: (Math.random() - 0.5) * 0.02,
+        }));
+        function draw() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          stars.forEach((s) => {
+            s.alpha += s.da;
+            if (s.alpha < 0.1 || s.alpha > 1) s.da *= -1;
+            ctx.fillStyle = `rgba(255,255,255,${s.alpha})`;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          requestAnimationFrame(draw);
+        }
+        draw();
+      }
+
+      // ====================== STORY SYSTEM ======================
+
+      const STORY_SCENES = [
+        {
+          art: "city",
+          chapter: "PRÓLOGO",
+          speaker: "",
+          text: "Aurevale. Uma cidade que tinha tudo certo — boa gente, paz, aquele tipo de lugar onde você deixa a porta aberta. Mas sabe como é... as coisas boas nunca duram pra sempre.",
+        },
+        {
+          art: "darkness",
+          chapter: "PRÓLOGO",
+          speaker: "",
+          text: "Numa noite qualquer, três caras apareceram e decidiram que Aurevale era deles agora. O Cavaleiro Corrompido. O Mago das Sombras. O Dragão da Guerra. Sem avisar, sem negociar. Só destruição.",
+        },
+        {
+          art: "darkness",
+          chapter: "PRÓLOGO",
+          speaker: "VOZ DAS SOMBRAS",
+          text: '"Essa cidade é nossa agora. Quem tentar resistir... bem, foi bom enquanto durou."',
+        },
+        {
+          art: "samuel_alone",
+          chapter: "CAPÍTULO I — SAMUEL",
+          speaker: "",
+          text: "Samuel não é o tipo de cara que faz discurso. Olhos vermelhos que já viram de tudo. Uma cicatriz que não conta a história — ele conta a história.",
+        },
+        {
+          art: "samuel_alone",
+          chapter: "CAPÍTULO I — SAMUEL",
+          speaker: "",
+          text: "Ele perdeu amigos nessa noite. Vizinhos. A padaria que ele gostava. Não é o tipo de coisa que você esquece. Mas Samuel não é o tipo de cara que chora muito. Ele age.",
+        },
+        {
+          art: "samuel_vow",
+          chapter: "CAPÍTULO I — SAMUEL",
+          speaker: "SAMUEL",
+          text: '"Tá bom. Então vai ser assim." *pega a espada* "Vou derrubar cada um de vocês. Não por glória, não por fama. Só porque alguém precisa fazer isso, e hoje esse alguém sou eu."',
+        },
+        {
+          art: "knight_appears",
+          chapter: "CAPÍTULO II — O PRIMEIRO",
+          speaker: "CAVALEIRO CORROMPIDO",
+          text: '"Hah! Olha só quem apareceu. Um guerreiro solitário contra nós três? Isso é coragem ou falta de noção?"',
+        },
+        {
+          art: "samuel_ready",
+          chapter: "CAPÍTULO II — O PRIMEIRO",
+          speaker: "SAMUEL",
+          text: '"As duas coisas." *sorri* "Pode vir."',
+        },
+      ];
+
+      let storyIndex = 0;
+      let storyTyping = false;
+      let storyTypingTimer = null;
+      let storyFullText = "";
+
+      function showStory() {
+        AC.resume();
+        document.getElementById("screen-title").style.display = "none";
+        document.getElementById("screen-story").style.display = "flex";
+
+        // Init stars for story screen
+        const sc = document.getElementById("storyStarsCanvas");
+        sc.width = window.innerWidth;
+        sc.height = window.innerHeight;
+        initStoryStars(sc);
+
+        storyIndex = 0;
+        renderScene(0);
+      }
+
+      function initStoryStars(canvas) {
+        const ctx = canvas.getContext("2d");
+        const stars = Array.from({ length: 120 }, () => ({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          r: Math.random() * 1.5,
+          alpha: 0.2 + Math.random() * 0.8,
+          da: (Math.random() - 0.5) * 0.015,
+        }));
+        function draw() {
+          if (document.getElementById("screen-story").style.display === "none")
+            return;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          stars.forEach((s) => {
+            s.alpha += s.da;
+            if (s.alpha < 0.1 || s.alpha > 1) s.da *= -1;
+            ctx.fillStyle = `rgba(255,255,255,${s.alpha})`;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          requestAnimationFrame(draw);
+        }
+        draw();
+      }
+
+      function renderScene(idx) {
+        const scene = STORY_SCENES[idx];
+
+        // Fade in elements
+        ["story-chapter", "story-box", "story-nav"].forEach((id) => {
+          document.getElementById(id).style.opacity = "0";
+        });
+        document.getElementById("storyArtCanvas").style.opacity = "0";
+
+        setTimeout(() => {
+          document.getElementById("story-chapter").textContent = scene.chapter;
+          document.getElementById("story-chapter").style.opacity = "1";
+          document.getElementById("story-box").style.opacity = "1";
+          document.getElementById("story-nav").style.opacity = "1";
+
+          // Draw scene art
+          const artCanvas = document.getElementById("storyArtCanvas");
+          drawSceneArt(artCanvas, scene.art);
+          artCanvas.style.opacity = "1";
+
+          // Speaker
+          const speakerEl = document.getElementById("story-speaker");
+          speakerEl.textContent = scene.speaker ? `[ ${scene.speaker} ]` : "";
+
+          // Typewriter text
+          typeText(scene.text);
+
+          // Last scene: change button
+          const nextBtn = document.getElementById("story-next");
+          if (idx === STORY_SCENES.length - 1) {
+            nextBtn.textContent = "⚔️ LUTAR!";
+          } else {
+            nextBtn.textContent = "▶ CONTINUAR";
+          }
+        }, 200);
+      }
+
+      function typeText(text) {
+        storyTyping = true;
+        storyFullText = text;
+        const el = document.getElementById("story-text");
+        const cursor = document.getElementById("story-cursor");
+        el.textContent = "";
+        cursor.style.opacity = "1";
+        let i = 0;
+        if (storyTypingTimer) clearInterval(storyTypingTimer);
+        storyTypingTimer = setInterval(() => {
+          if (i < text.length) {
+            el.textContent += text[i];
+            i++;
+          } else {
+            clearInterval(storyTypingTimer);
+            storyTyping = false;
+          }
+        }, 30);
+      }
+
+      function nextScene() {
+        // If still typing, show full text instantly
+        if (storyTyping) {
+          if (storyTypingTimer) clearInterval(storyTypingTimer);
+          storyTyping = false;
+          document.getElementById("story-text").textContent = storyFullText;
+          return;
+        }
+
+        storyIndex++;
+        if (storyIndex >= STORY_SCENES.length) {
+          // Go to game
+          document.getElementById("screen-story").style.display = "none";
+          startGame();
+        } else {
+          renderScene(storyIndex);
+        }
+      }
+
+      function skipStory() {
+        if (storyTypingTimer) clearInterval(storyTypingTimer);
+        document.getElementById("screen-story").style.display = "none";
+        startGame();
+      }
+
+      // ---- Scene Art Drawings ----
+      function drawSceneArt(canvas, type) {
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const W = canvas.width,
+          H = canvas.height;
+
+        // Sky gradient base
+        const sky = ctx.createLinearGradient(0, 0, 0, H);
+
+        if (type === "city") {
+          sky.addColorStop(0, "#050518");
+          sky.addColorStop(1, "#1a0a2a");
+          ctx.fillStyle = sky;
+          ctx.fillRect(0, 0, W, H);
+          // Stars
+          for (let i = 0; i < 60; i++) {
+            ctx.fillStyle = `rgba(255,255,255,${0.3 + Math.random() * 0.7})`;
+            ctx.fillRect(Math.random() * W, Math.random() * H * 0.6, 1, 1);
+          }
+          // Moon
+          ctx.fillStyle = "#ffe8aa";
+          ctx.beginPath();
+          ctx.arc(260, 30, 18, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#1a0a2a";
+          ctx.beginPath();
+          ctx.arc(268, 26, 15, 0, Math.PI * 2);
+          ctx.fill();
+          // Buildings (bright city)
+          const bldgs = [
+            [20, 60, 30, 100, "#2a2a6a"],
+            [55, 40, 35, 120, "#1e1e5a"],
+            [95, 30, 25, 130, "#252570"],
+            [125, 50, 40, 110, "#1a1a50"],
+            [170, 20, 30, 140, "#2a2a70"],
+            [205, 45, 35, 115, "#1e1e60"],
+            [245, 35, 28, 125, "#222268"],
+            [278, 55, 32, 105, "#1a1a55"],
+          ];
+          bldgs.forEach(([x, y, w, h, c]) => {
+            ctx.fillStyle = c;
+            ctx.fillRect(x, y, w, h);
+            // Windows
+            for (let wy = y + 8; wy < y + h - 10; wy += 12)
+              for (let wx = x + 4; wx < x + w - 4; wx += 8) {
+                ctx.fillStyle = Math.random() > 0.3 ? "#ffe066aa" : "#334";
+                ctx.fillRect(wx, wy, 4, 6);
+              }
+          });
+          // Ground
+          ctx.fillStyle = "#0a0820";
+          ctx.fillRect(0, H - 20, W, 20);
+          // Glow from city
+          const grd = ctx.createLinearGradient(0, H - 40, 0, H - 20);
+          grd.addColorStop(0, "rgba(100,80,255,0.15)");
+          grd.addColorStop(1, "rgba(100,80,255,0)");
+          ctx.fillStyle = grd;
+          ctx.fillRect(0, H - 40, W, 40);
+          // Title overlay
+          ctx.fillStyle = "rgba(0,0,0,0.3)";
+          ctx.fillRect(0, 0, W, H);
+          ctx.fillStyle = "#ffe066";
+          ctx.font = "bold 11px monospace";
+          ctx.textAlign = "center";
+          ctx.fillText("AUREVALE", W / 2, H - 30);
+          ctx.fillStyle = "#8888ff";
+          ctx.font = "8px monospace";
+          ctx.fillText("A Cidade da Honra", W / 2, H - 18);
+        } else if (type === "darkness") {
+          sky.addColorStop(0, "#000000");
+          sky.addColorStop(1, "#0a0010");
+          ctx.fillStyle = sky;
+          ctx.fillRect(0, 0, W, H);
+          // Dark red clouds
+          ctx.fillStyle = "rgba(80,0,0,0.5)";
+          ctx.beginPath();
+          ctx.ellipse(80, 40, 60, 25, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.ellipse(220, 30, 80, 30, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.ellipse(280, 55, 50, 20, 0, 0, Math.PI * 2);
+          ctx.fill();
+          // Evil glow from clouds
+          ctx.fillStyle = "rgba(180,0,0,0.15)";
+          ctx.beginPath();
+          ctx.ellipse(W / 2, 50, W / 2, 50, 0, 0, Math.PI * 2);
+          ctx.fill();
+          // Buildings in darkness
+          [
+            [10, 50, 40, 110, "#050510"],
+            [55, 30, 30, 130, "#060612"],
+            [90, 40, 45, 120, "#040410"],
+            [140, 20, 35, 140, "#050510"],
+            [180, 35, 40, 125, "#060612"],
+            [225, 25, 30, 135, "#040410"],
+            [260, 45, 38, 115, "#050510"],
+          ].forEach(([x, y, w, h, c]) => {
+            ctx.fillStyle = c;
+            ctx.fillRect(x, y, w, h);
+            // Broken/dark windows
+            for (let wy = y + 8; wy < y + h - 10; wy += 12)
+              for (let wx = x + 4; wx < x + w - 4; wx += 8) {
+                if (Math.random() > 0.7) {
+                  ctx.fillStyle = "#330000";
+                  ctx.fillRect(wx, wy, 4, 6);
+                }
+              }
+          });
+          // Three silhouettes of evil bosses descending
+          ctx.fillStyle = "rgba(150,0,200,0.7)";
+          ctx.beginPath();
+          ctx.arc(80, H - 50, 15, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "rgba(0,0,180,0.7)";
+          ctx.beginPath();
+          ctx.arc(W / 2, H - 60, 12, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "rgba(180,50,0,0.7)";
+          ctx.beginPath();
+          ctx.arc(240, H - 45, 20, 0, Math.PI * 2);
+          ctx.fill();
+          // Lightning
+          ctx.strokeStyle = "rgba(255,100,255,0.8)";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(150, 0);
+          ctx.lineTo(140, 30);
+          ctx.lineTo(155, 30);
+          ctx.lineTo(138, 70);
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(100,100,255,0.8)";
+          ctx.beginPath();
+          ctx.moveTo(250, 0);
+          ctx.lineTo(258, 25);
+          ctx.lineTo(245, 25);
+          ctx.lineTo(260, 55);
+          ctx.stroke();
+        } else if (type === "samuel_alone") {
+          sky.addColorStop(0, "#040410");
+          sky.addColorStop(0.6, "#0a0820");
+          sky.addColorStop(1, "#1a0a10");
+          ctx.fillStyle = sky;
+          ctx.fillRect(0, 0, W, H);
+          // Ground/floor
+          ctx.fillStyle = "#0d0820";
+          ctx.fillRect(0, H - 35, W, 35);
+          ctx.strokeStyle = "#2a2255";
+          ctx.lineWidth = 1;
+          for (let x = 0; x < W; x += 20) {
+            ctx.beginPath();
+            ctx.moveTo(x, H - 35);
+            ctx.lineTo(x + 10, H);
+            ctx.stroke();
+          }
+          // Torches on wall
+          [
+            [60, H - 80],
+            [260, H - 80],
+          ].forEach(([tx, ty]) => {
+            ctx.fillStyle = "#5a3300";
+            ctx.fillRect(tx - 3, ty, 6, 20);
+            ctx.fillStyle = "#ff8800";
+            ctx.beginPath();
+            ctx.arc(tx, ty, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "rgba(255,150,0,0.15)";
+            ctx.beginPath();
+            ctx.arc(tx, ty, 20, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          // Samuel silhouette (larger, dramatic)
+          const sx = W / 2,
+            sy = H - 35;
+          // Body
+          ctx.fillStyle = "#3a1a00";
+          ctx.fillRect(sx - 8, sy - 55, 16, 25); // torso
+          ctx.beginPath();
+          ctx.arc(sx, sy - 65, 12, 0, Math.PI * 2);
+          ctx.fill(); // head
+          // Dark hair
+          ctx.fillStyle = "#1a1a2a";
+          ctx.beginPath();
+          ctx.arc(sx, sy - 70, 9, Math.PI, Math.PI * 2);
+          ctx.fill();
+          // Red eyes
+          ctx.fillStyle = "#ff0000";
+          ctx.fillRect(sx - 5, sy - 68, 3, 2);
+          ctx.fillRect(sx + 2, sy - 68, 3, 2);
+          // Pants
+          ctx.fillStyle = "#1e3a6a";
+          ctx.fillRect(sx - 7, sy - 30, 6, 30);
+          ctx.fillRect(sx + 1, sy - 30, 6, 30);
+          // Cape
+          ctx.fillStyle = "#0a0a20";
+          ctx.beginPath();
+          ctx.moveTo(sx - 8, sy - 50);
+          ctx.lineTo(sx - 20, sy);
+          ctx.lineTo(sx - 8, sy - 10);
+          ctx.fill();
+          // Sword glow
+          ctx.strokeStyle = "#4488ff";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(sx + 8, sy - 40);
+          ctx.lineTo(sx + 28, sy - 65);
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(68,136,255,0.3)";
+          ctx.lineWidth = 6;
+          ctx.beginPath();
+          ctx.moveTo(sx + 8, sy - 40);
+          ctx.lineTo(sx + 28, sy - 65);
+          ctx.stroke();
+          // Shadow on ground
+          ctx.fillStyle = "rgba(0,0,0,0.5)";
+          ctx.beginPath();
+          ctx.ellipse(sx, H - 6, 20, 5, 0, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (type === "samuel_vow") {
+          sky.addColorStop(0, "#040410");
+          sky.addColorStop(1, "#0a0515");
+          ctx.fillStyle = sky;
+          ctx.fillRect(0, 0, W, H);
+          // Burning city bg
+          ctx.fillStyle = "rgba(100,20,0,0.3)";
+          ctx.fillRect(0, H * 0.4, W, H * 0.6);
+          // Flames in bg
+          for (let i = 0; i < 8; i++) {
+            const fx = 30 + i * 38,
+              fh = 20 + Math.random() * 30;
+            ctx.fillStyle = `rgba(255,${80 + i * 20},0,0.6)`;
+            ctx.beginPath();
+            ctx.moveTo(fx, H - 20);
+            ctx.lineTo(fx - 10, H - 20 - fh);
+            ctx.lineTo(fx + 10, H - 20 - fh);
+            ctx.fill();
+          }
+          // Samuel close-up (face focus)
+          const sx = W / 2 - 10,
+            sy = H / 2 + 10;
+          // Head
+          ctx.fillStyle = "#4a2200";
+          ctx.beginPath();
+          ctx.arc(sx, sy, 22, 0, Math.PI * 2);
+          ctx.fill();
+          // Dark hair
+          ctx.fillStyle = "#1a1a2a";
+          ctx.beginPath();
+          ctx.arc(sx, sy - 8, 20, Math.PI + 0.3, Math.PI * 2 - 0.3);
+          ctx.fill();
+          ctx.fillRect(sx - 20, sy - 16, 8, 14); // hair side left
+          ctx.fillRect(sx + 12, sy - 16, 8, 14); // hair side right
+          // Red eyes (intense)
+          ctx.fillStyle = "#ff0000";
+          ctx.beginPath();
+          ctx.arc(sx - 8, sy - 2, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(sx + 8, sy - 2, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ff6600";
+          ctx.beginPath();
+          ctx.arc(sx - 8, sy - 2, 2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(sx + 8, sy - 2, 2, 0, Math.PI * 2);
+          ctx.fill();
+          // Eye glow
+          ctx.fillStyle = "rgba(255,0,0,0.2)";
+          ctx.beginPath();
+          ctx.arc(sx - 8, sy - 2, 10, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(sx + 8, sy - 2, 10, 0, Math.PI * 2);
+          ctx.fill();
+          // Scar
+          ctx.strokeStyle = "#ff7755";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(sx - 4, sy - 6);
+          ctx.lineTo(sx + 3, sy + 2);
+          ctx.stroke();
+          // Bandana
+          ctx.fillStyle = "#cc0000";
+          ctx.fillRect(sx - 20, sy - 18, 40, 6);
+          // Raised fist with sword
+          ctx.fillStyle = "#4a2200";
+          ctx.fillRect(sx + 20, sy - 30, 10, 20);
+          ctx.strokeStyle = "#aaddff";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(sx + 25, sy - 30);
+          ctx.lineTo(sx + 40, sy - 55);
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(68,136,255,0.4)";
+          ctx.lineWidth = 8;
+          ctx.beginPath();
+          ctx.moveTo(sx + 25, sy - 30);
+          ctx.lineTo(sx + 40, sy - 55);
+          ctx.stroke();
+          // Speech bubble hint
+          ctx.fillStyle = "rgba(255,230,100,0.1)";
+          ctx.strokeStyle = "rgba(255,230,100,0.3)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.roundRect(sx + 40, sy - 80, 100, 35, 4);
+          ctx.fill();
+          ctx.stroke();
+        } else if (type === "knight_appears") {
+          sky.addColorStop(0, "#050020");
+          sky.addColorStop(1, "#0a0030");
+          ctx.fillStyle = sky;
+          ctx.fillRect(0, 0, W, H);
+          // Dark fog
+          ctx.fillStyle = "rgba(40,0,60,0.5)";
+          ctx.fillRect(0, H * 0.5, W, H * 0.5);
+          // Ruined pillars
+          [
+            [20, H * 0.2, 20, H * 0.8],
+            [290, H * 0.15, 22, H * 0.85],
+          ].forEach(([x, y, w, h]) => {
+            ctx.fillStyle = "#1a1130";
+            ctx.fillRect(x, y, w, h);
+            ctx.fillStyle = "#110a20";
+            ctx.fillRect(x + 2, y, 4, h);
+          });
+          // Knight silhouette (imposing)
+          const kx = W / 2,
+            ky = H - 30;
+          // Legs
+          ctx.fillStyle = "#2a2a5a";
+          ctx.fillRect(kx - 12, ky - 40, 10, 40);
+          ctx.fillRect(kx + 2, ky - 40, 10, 40);
+          // Body
+          ctx.fillRect(kx - 16, ky - 75, 32, 38);
+          // Shoulder armor
+          ctx.fillRect(kx - 22, ky - 72, 10, 18);
+          ctx.fillRect(kx + 12, ky - 72, 10, 18);
+          // Head/helmet
+          ctx.beginPath();
+          ctx.arc(kx, ky - 85, 16, 0, Math.PI * 2);
+          ctx.fill();
+          // Helmet plume
+          ctx.fillStyle = "#880000";
+          ctx.fillRect(kx - 2, ky - 105, 4, 22);
+          ctx.beginPath();
+          ctx.arc(kx, ky - 103, 6, 0, Math.PI * 2);
+          ctx.fill();
+          // Glowing eyes
+          ctx.fillStyle = "#ff6600";
+          ctx.fillRect(kx - 8, ky - 88, 5, 4);
+          ctx.fillRect(kx + 3, ky - 88, 5, 4);
+          ctx.fillStyle = "rgba(255,100,0,0.3)";
+          ctx.beginPath();
+          ctx.arc(kx, ky - 87, 12, 0, Math.PI * 2);
+          ctx.fill();
+          // Sword raised
+          ctx.strokeStyle = "#8888ff";
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(kx + 18, ky - 60);
+          ctx.lineTo(kx + 45, ky - 100);
+          ctx.stroke();
+          // Glow aura
+          ctx.fillStyle = "rgba(0,0,150,0.15)";
+          ctx.beginPath();
+          ctx.arc(kx, ky - 60, 50, 0, Math.PI * 2);
+          ctx.fill();
+          // Evil energy particles
+          for (let i = 0; i < 12; i++) {
+            const angle = (i / 12) * Math.PI * 2,
+              r = 40 + Math.random() * 20;
+            ctx.fillStyle = `rgba(80,80,255,0.6)`;
+            ctx.fillRect(
+              kx + Math.cos(angle) * r - 2,
+              ky - 60 + Math.sin(angle) * r - 2,
+              4,
+              4,
+            );
+          }
+        } else if (type === "samuel_ready") {
+          sky.addColorStop(0, "#040412");
+          sky.addColorStop(1, "#0d0a1a");
+          ctx.fillStyle = sky;
+          ctx.fillRect(0, 0, W, H);
+          // Ground glow (arena)
+          ctx.fillStyle = "rgba(60,60,180,0.1)";
+          ctx.fillRect(0, H - 50, W, 50);
+          ctx.strokeStyle = "rgba(80,80,200,0.3)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(0, H - 50);
+          ctx.lineTo(W, H - 50);
+          ctx.stroke();
+          // Samuel and enemy facing each other
+          // Samuel (left)
+          const ssx = 90,
+            ssy = H - 30;
+          ctx.fillStyle = "#4a2200";
+          ctx.fillRect(ssx - 8, ssy - 55, 16, 25);
+          ctx.beginPath();
+          ctx.arc(ssx, ssy - 65, 12, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#1a1a2a";
+          ctx.beginPath();
+          ctx.arc(ssx, ssy - 70, 10, Math.PI + 0.2, Math.PI * 2 - 0.2);
+          ctx.fill();
+          ctx.fillRect(ssx - 10, ssy - 70, 5, 12);
+          ctx.fillRect(ssx + 5, ssy - 70, 5, 12);
+          ctx.fillStyle = "#ff2200";
+          ctx.fillRect(ssx - 5, ssy - 67, 3, 2);
+          ctx.fillRect(ssx + 2, ssy - 67, 3, 2);
+          ctx.fillStyle = "#1e3a6a";
+          ctx.fillRect(ssx - 7, ssy - 30, 6, 30);
+          ctx.fillRect(ssx + 1, ssy - 30, 6, 30);
+          ctx.strokeStyle = "#aaddff";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(ssx + 8, ssy - 45);
+          ctx.lineTo(ssx + 30, ssy - 70);
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(68,136,255,0.4)";
+          ctx.lineWidth = 7;
+          ctx.beginPath();
+          ctx.moveTo(ssx + 8, ssy - 45);
+          ctx.lineTo(ssx + 30, ssy - 70);
+          ctx.stroke();
+          // Knight (right, facing left)
+          const kx = 230,
+            ky = H - 30;
+          ctx.fillStyle = "#2a2a5a";
+          ctx.fillRect(kx - 16, kx - H + H - 75, 32, 38);
+          ctx.fillRect(kx - 12, ky - 40, 10, 40);
+          ctx.fillRect(kx + 2, ky - 40, 10, 40);
+          ctx.fillRect(kx - 16, ky - 75, 32, 38);
+          ctx.fillRect(kx - 22, ky - 72, 10, 18);
+          ctx.fillRect(kx + 12, ky - 72, 10, 18);
+          ctx.beginPath();
+          ctx.arc(kx, ky - 85, 15, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#880000";
+          ctx.fillRect(kx - 2, ky - 103, 4, 20);
+          ctx.fillStyle = "#ff6600";
+          ctx.fillRect(kx - 8, ky - 88, 5, 4);
+          ctx.fillRect(kx + 3, ky - 88, 5, 4);
+          ctx.strokeStyle = "#6666cc";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(kx - 18, ky - 60);
+          ctx.lineTo(kx - 42, ky - 90);
+          ctx.stroke();
+          // VS
+          ctx.fillStyle = "#ffe066";
+          ctx.font = "bold 18px monospace";
+          ctx.textAlign = "center";
+          ctx.fillText("VS", W / 2, H / 2);
+          ctx.strokeStyle = "rgba(255,230,100,0.4)";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(W / 2 - 16, H / 2 - 18, 32, 22);
+          // Dramatic lightning between them
+          ctx.strokeStyle = "rgba(255,255,100,0.5)";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(ssx + 35, ssy - 60);
+          ctx.lineTo(W / 2 - 5, H / 2 - 5);
+          ctx.lineTo(kx - 35, ky - 60);
+          ctx.stroke();
+        }
+      }
+
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".btn-wrap")) closeSkillMenu();
+      });
+
+      // Init
+      window.onload = () => {
+        initTitleStars();
+        drawSamuel(document.getElementById("titleCharCanvas"), 0);
+        // Animate title char
+        let f = 0;
+        setInterval(() => {
+          f++;
+          drawSamuel(document.getElementById("titleCharCanvas"), f);
+        }, 400);
+      };
+    </script>
+  </body>
+</html>
